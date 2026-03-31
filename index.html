@@ -8,7 +8,1386 @@
 <style>
   :root {
     --bleu: #0a1472;
+    --bleu-clair: #1a2a9e;<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LexMatch — Le Jeu Juridique</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bleu: #0a1472;
     --bleu-clair: #1a2a9e;
+    --bleu-fonce: #060d4e;
+    --or: #A07F4C;
+    --or-clair: #c9a96e;
+    --or-pale: #e8d5b0;
+    --blanc: #f7f7f7;
+    --blanc-pur: #ffffff;
+    --gris-clair: #f0f0f0;
+    --gris: #888;
+    --vert: #2ecc71;
+    --rouge: #e74c3c;
+    --shadow: 0 8px 32px rgba(10,20,114,0.15);
+    --shadow-or: 0 4px 20px rgba(160,127,76,0.3);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background: var(--blanc);
+    color: var(--bleu);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-pattern {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse at 80% 10%, rgba(160,127,76,0.07) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 80%, rgba(10,20,114,0.06) 0%, transparent 50%);
+  }
+  .bg-pattern::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230a1472' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* ─── SCREENS ─── */
+  .screen {
+    display: none;
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    animation: fadeIn 0.4s ease;
+    flex-direction: column;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    background: var(--bleu);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 20px rgba(10,20,114,0.3);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .header::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--or), transparent);
+  }
+  .header-logo { display: flex; align-items: center; gap: 12px; }
+  .header-logo-img { width: 40px; height: 40px; object-fit: contain; }
+  .header-title {
+    font-family: 'Cinzel', serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--blanc);
+    letter-spacing: 2px;
+  }
+  .header-title span { color: var(--or-clair); }
+  .header-badge {
+    background: var(--or);
+    color: var(--blanc-pur);
+    font-family: 'Cinzel', serif;
+    font-size: 10px; font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+  }
+
+  /* ─── CONTENT ─── */
+  .content {
+    flex: 1;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--blanc-pur);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    border: 1px solid rgba(160,127,76,0.12);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--bleu), var(--or), var(--bleu));
+  }
+
+  /* ─── TYPOGRAPHY ─── */
+  .title-cinzel { font-family: 'Cinzel', serif; color: var(--bleu); text-align: center; }
+  .title-xl { font-size: 28px; font-weight: 700; line-height: 1.2; }
+  .title-lg { font-size: 22px; font-weight: 600; }
+  .title-md { font-size: 17px; font-weight: 600; }
+  .subtitle { font-size: 14px; color: var(--gris); text-align: center; line-height: 1.6; font-weight: 400; }
+  .or-text { color: var(--or); }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 16px 32px;
+    border-radius: var(--radius-sm);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; border: none;
+    transition: all 0.2s ease;
+    width: 100%;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--bleu), var(--bleu-clair));
+    color: var(--blanc-pur);
+    box-shadow: 0 4px 16px rgba(10,20,114,0.3);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 20px rgba(10,20,114,0.4); transform: translateY(-1px); }
+
+  .btn-or {
+    background: linear-gradient(135deg, var(--or), var(--or-clair));
+    color: var(--blanc-pur);
+    box-shadow: var(--shadow-or);
+  }
+  .btn-or:hover { box-shadow: 0 6px 24px rgba(160,127,76,0.45); transform: translateY(-1px); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--bleu);
+    border: 2px solid var(--bleu);
+  }
+  .btn-outline:hover { background: var(--bleu); color: var(--blanc-pur); }
+
+  .btn-ghost {
+    background: var(--gris-clair);
+    color: var(--bleu);
+    box-shadow: none;
+  }
+
+  /* ─── INPUT ─── */
+  .input-group { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+  .input-label { font-size: 12px; font-weight: 600; color: var(--bleu); letter-spacing: 1px; text-transform: uppercase; }
+  .input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid rgba(10,20,114,0.15);
+    border-radius: var(--radius-sm);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    color: var(--bleu);
+    background: var(--blanc);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .input:focus { border-color: var(--or); }
+  .input::placeholder { color: #bbb; }
+
+  /* ─── MASCOTTE ─── */
+  .mascotte-wrap { display: flex; justify-content: center; animation: float 3s ease-in-out infinite; }
+  .mascotte-img { width: 120px; height: 120px; object-fit: contain; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider { display: flex; align-items: center; gap: 12px; width: 100%; }
+  .divider-line { flex: 1; height: 1px; background: rgba(160,127,76,0.25); }
+  .divider-text { font-size: 11px; color: var(--or); font-weight: 600; letter-spacing: 1px; }
+
+  /* ─── MODE SELECTOR ─── */
+  .mode-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+  .mode-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    border-radius: var(--radius-sm);
+    border: 2px solid rgba(10,20,114,0.12);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--blanc);
+  }
+  .mode-card:hover { border-color: var(--or); background: rgba(160,127,76,0.04); }
+  .mode-card.selected { border-color: var(--bleu); background: rgba(10,20,114,0.04); }
+  .mode-icon { font-size: 24px; width: 40px; text-align: center; }
+  .mode-info { flex: 1; }
+  .mode-name { font-weight: 600; font-size: 14px; color: var(--bleu); }
+  .mode-desc { font-size: 12px; color: var(--gris); margin-top: 2px; }
+  .mode-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; letter-spacing: 0.5px; }
+  .badge-easy { background: rgba(46,204,113,0.15); color: #27ae60; }
+  .badge-medium { background: rgba(160,127,76,0.15); color: var(--or); }
+
+  /* ─── MANCHE COUNTER ─── */
+  .manche-selector { display: flex; align-items: center; gap: 16px; justify-content: center; }
+  .manche-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 2px solid var(--bleu);
+    background: transparent;
+    color: var(--bleu);
+    font-size: 20px; font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .manche-btn:hover { background: var(--bleu); color: white; }
+  .manche-count { font-family: 'Cinzel', serif; font-size: 32px; font-weight: 700; color: var(--bleu); min-width: 48px; text-align: center; }
+  .manche-label { font-size: 12px; color: var(--gris); }
+
+  /* ─── PROGRESS ─── */
+  .progress-wrap { width: 100%; }
+  .progress-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--gris); margin-bottom: 8px; font-weight: 500; }
+  .progress-bar { height: 6px; background: var(--gris-clair); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--bleu), var(--or)); border-radius: 3px; transition: width 0.5s ease; }
+
+  /* ─── SITUATION CARD ─── */
+  .situation-card {
+    background: linear-gradient(135deg, var(--bleu) 0%, var(--bleu-fonce) 100%);
+    border-radius: var(--radius);
+    padding: 28px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(10,20,114,0.25);
+  }
+  .situation-card::before {
+    content: '⚖';
+    position: absolute; top: -10px; right: -10px;
+    font-size: 80px; opacity: 0.06;
+    transform: rotate(15deg);
+  }
+  .situation-label { font-size: 10px; font-weight: 700; color: var(--or-clair); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+  .situation-text { font-size: 15px; line-height: 1.7; color: var(--blanc-pur); font-weight: 400; }
+  .situation-num { position: absolute; top: 16px; right: 20px; font-family: 'Cinzel', serif; font-size: 11px; color: rgba(255,255,255,0.3); }
+
+  /* ─── CHOICES ─── */
+  .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+  .choice-btn {
+    padding: 16px 12px;
+    border-radius: var(--radius-sm);
+    border: 2px solid rgba(10,20,114,0.12);
+    background: var(--blanc-pur);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px; font-weight: 600;
+    color: var(--bleu);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    line-height: 1.3;
+    box-shadow: 0 2px 8px rgba(10,20,114,0.08);
+  }
+  .choice-btn:hover:not(:disabled) { border-color: var(--or); background: rgba(160,127,76,0.04); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(10,20,114,0.12); }
+  .choice-btn:disabled { cursor: not-allowed; }
+  .choice-btn.correct { border-color: var(--vert); background: rgba(46,204,113,0.1); color: #27ae60; }
+  .choice-btn.incorrect { border-color: var(--rouge); background: rgba(231,76,60,0.08); color: var(--rouge); }
+
+  /* ─── RESULT REVEAL ─── */
+  .result-reveal { width: 100%; border-radius: var(--radius); padding: 20px; animation: slideUp 0.4s ease; }
+  .result-correct { background: rgba(46,204,113,0.1); border: 2px solid rgba(46,204,113,0.3); }
+  .result-incorrect { background: rgba(231,76,60,0.08); border: 2px solid rgba(231,76,60,0.2); }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .result-emoji { font-size: 32px; margin-bottom: 8px; }
+  .result-title { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .result-correct .result-title { color: #27ae60; }
+  .result-incorrect .result-title { color: var(--rouge); }
+  .result-explication { font-size: 13px; line-height: 1.6; color: #555; }
+  .result-bonne-rep { font-size: 12px; font-weight: 600; color: #27ae60; margin-bottom: 8px; }
+
+  /* ─── SCORE ─── */
+  .score-ring {
+    width: 140px; height: 140px; border-radius: 50%;
+    background: conic-gradient(var(--or) var(--pct, 0%), var(--gris-clair) 0%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 32px rgba(160,127,76,0.2);
+  }
+  .score-ring-inner { width: 110px; height: 110px; border-radius: 50%; background: var(--blanc-pur); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .score-num { font-family: 'Cinzel', serif; font-size: 36px; font-weight: 900; color: var(--bleu); line-height: 1; }
+  .score-denom { font-size: 12px; color: var(--gris); font-weight: 500; }
+
+  /* ─── STATS ─── */
+  .stats-row { display: flex; gap: 10px; width: 100%; }
+  .stat-pill { flex: 1; background: var(--blanc-pur); border-radius: var(--radius-sm); padding: 14px; text-align: center; box-shadow: var(--shadow); border: 1px solid rgba(160,127,76,0.1); }
+  .stat-pill-num { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700; color: var(--bleu); }
+  .stat-pill-label { font-size: 11px; color: var(--gris); margin-top: 2px; }
+
+  /* ─── COMPARATIF ─── */
+  .comparatif { width: 100%; background: linear-gradient(135deg, var(--bleu), var(--bleu-fonce)); border-radius: var(--radius); padding: 20px; text-align: center; color: var(--blanc-pur); }
+  .comparatif-pct { font-family: 'Cinzel', serif; font-size: 40px; font-weight: 900; color: var(--or-clair); }
+  .comparatif-text { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+
+  /* ─── BENEFIT ROWS ─── */
+  .benefit-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--bleu); }
+  .benefit-icon { font-size: 16px; }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--bleu); color: white;
+    padding: 12px 24px; border-radius: 100px;
+    font-size: 13px; font-weight: 500;
+    box-shadow: 0 8px 32px rgba(10,20,114,0.3);
+    z-index: 2000; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ─── PASSWORD MODAL ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 1500;
+    background: rgba(6,13,78,0.7);
+    backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: var(--blanc-pur);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    width: 90%; max-width: 360px;
+    box-shadow: 0 20px 60px rgba(6,13,78,0.3);
+    text-align: center;
+    animation: slideUp 0.3s ease;
+    border: 1px solid rgba(160,127,76,0.2);
+    position: relative;
+  }
+  .modal-box::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--bleu), var(--or), var(--bleu));
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .modal-icon { font-size: 40px; margin-bottom: 12px; }
+  .modal-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--bleu); margin-bottom: 6px; }
+  .modal-subtitle { font-size: 13px; color: var(--gris); margin-bottom: 20px; }
+  .modal-error { font-size: 12px; color: var(--rouge); margin-top: 8px; height: 16px; }
+
+  /* ═══════════════════════════════════════════
+     PRESENTER VIEW
+  ═══════════════════════════════════════════ */
+  .presenter-screen {
+    display: none; min-height: 100vh;
+    background: var(--bleu-fonce);
+    flex-direction: column; position: relative; overflow: hidden;
+  }
+  .presenter-screen.active { display: flex; }
+
+  .presenter-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse at 10% 90%, rgba(160,127,76,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 10%, rgba(10,20,114,0.5) 0%, transparent 50%);
+  }
+
+  .presenter-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 40px; position: relative; z-index: 1;
+    border-bottom: 1px solid rgba(160,127,76,0.2);
+    flex-shrink: 0;
+  }
+  .presenter-logo { display: flex; align-items: center; gap: 16px; }
+  .presenter-logo img { width: 50px; height: 50px; object-fit: contain; }
+  .presenter-brand { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 700; color: var(--blanc-pur); letter-spacing: 3px; }
+  .presenter-brand span { color: var(--or-clair); }
+  .presenter-subtitle { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+
+  .presenter-body {
+    flex: 1; display: grid; grid-template-columns: 1fr 340px;
+    position: relative; z-index: 1; overflow: hidden;
+  }
+
+  .presenter-main {
+    padding: 40px; display: flex; flex-direction: column; gap: 28px;
+    border-right: 1px solid rgba(160,127,76,0.15); overflow-y: auto;
+  }
+  .presenter-sidebar { padding: 32px 28px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
+
+  .qr-box { background: rgba(255,255,255,0.05); border: 1px solid rgba(160,127,76,0.2); border-radius: var(--radius); padding: 24px; text-align: center; }
+  .qr-placeholder { width: 140px; height: 140px; background: var(--blanc-pur); border-radius: 8px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--gris); padding: 12px; text-align: center; }
+  .qr-label { font-family: 'Cinzel', serif; font-size: 13px; color: var(--or-clair); letter-spacing: 1px; }
+  .qr-url { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; word-break: break-all; }
+
+  .lb-title { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 600; color: var(--or-clair); letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .lb-list { display: flex; flex-direction: column; gap: 8px; }
+  .lb-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); animation: slideInRight 0.4s ease; }
+  .lb-row:first-child { background: rgba(160,127,76,0.12); border-color: rgba(160,127,76,0.25); }
+  @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  .lb-rank { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--or-clair); min-width: 24px; }
+  .lb-pseudo { flex: 1; font-size: 14px; font-weight: 500; color: var(--blanc-pur); }
+  .lb-score { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700; color: var(--or-clair); }
+  .lb-empty { text-align: center; font-size: 13px; color: rgba(255,255,255,0.3); padding: 20px; font-style: italic; }
+
+  .sessions-label { font-family: 'Cinzel', serif; font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .sessions-list { display: flex; flex-direction: column; gap: 8px; }
+  .session-card-p { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: all 0.2s; }
+  .session-card-p:hover { background: rgba(160,127,76,0.1); border-color: rgba(160,127,76,0.3); }
+  .session-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--vert); animation: pulse 2s infinite; flex-shrink: 0; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+  .session-pseudo { font-size: 14px; font-weight: 600; color: var(--blanc-pur); flex: 1; }
+  .session-manche { font-size: 12px; color: rgba(255,255,255,0.4); }
+
+  .live-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(231,76,60,0.2); border: 1px solid rgba(231,76,60,0.4); border-radius: 100px; padding: 6px 14px; font-size: 11px; font-weight: 700; color: #ff6b6b; letter-spacing: 1px; text-transform: uppercase; }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #ff6b6b; animation: pulse 1s infinite; }
+
+  .presenter-situation { background: rgba(255,255,255,0.05); border: 1px solid rgba(160,127,76,0.2); border-radius: var(--radius); padding: 32px; position: relative; overflow: hidden; }
+  .presenter-situation::before { content: '⚖'; position: absolute; bottom: -20px; right: -10px; font-size: 120px; opacity: 0.04; }
+  .p-situation-label { font-size: 11px; color: var(--or-clair); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; font-weight: 600; }
+  .p-situation-text { font-size: 20px; line-height: 1.6; color: var(--blanc-pur); font-weight: 400; }
+
+  .p-choices { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .p-choice { padding: 16px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.7); transition: all 0.4s; }
+  .p-choice.selected-choice { border-color: var(--bleu-clair); background: rgba(26,42,158,0.3); color: var(--blanc-pur); }
+  .p-choice.correct-choice { border-color: var(--vert); background: rgba(46,204,113,0.15); color: var(--vert); font-weight: 700; }
+  .p-choice.incorrect-choice { border-color: var(--rouge); background: rgba(231,76,60,0.12); color: var(--rouge); }
+
+  .p-waiting { text-align: center; padding: 40px; color: rgba(255,255,255,0.4); font-size: 16px; }
+  .p-waiting-icon { font-size: 48px; margin-bottom: 16px; }
+
+  .p-stats-row { display: flex; gap: 12px; }
+  .p-stat { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm); padding: 16px; text-align: center; }
+  .p-stat-num { font-family: 'Cinzel', serif; font-size: 28px; font-weight: 700; color: var(--or-clair); }
+  .p-stat-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+  .p-player-name { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700; color: var(--blanc-pur); }
+  .p-player-score { font-size: 14px; color: var(--or-clair); margin-top: 4px; }
+
+  .back-btn { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm); padding: 10px 18px; color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: 'Montserrat', sans-serif; }
+  .back-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+
+  /* ─── VIEW SWITCHER ─── */
+  .view-switcher { position: fixed; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 8px; }
+  .view-btn { padding: 8px 16px; border-radius: 100px; border: none; cursor: pointer; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; transition: all 0.2s; letter-spacing: 0.5px; }
+  .view-btn-player { background: var(--bleu); color: white; }
+  .view-btn-presenter { background: rgba(255,255,255,0.15); color: white; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); }
+
+  /* ─── LOADING ─── */
+  .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 16px; }
+  .spinner { width: 40px; height: 40px; border: 3px solid rgba(10,20,114,0.1); border-top-color: var(--or); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── CONFETTI ─── */
+  .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+  .confetto { position: absolute; animation: fall linear forwards; }
+  @keyframes fall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+  .footer { text-align: center; padding: 16px; font-size: 11px; color: rgba(10,20,114,0.3); letter-spacing: 0.5px; }
+
+  @media (max-width: 480px) {
+    .content { padding: 20px 16px; }
+    .title-xl { font-size: 24px; }
+    .p-choices { grid-template-columns: 1fr 1fr; }
+    .presenter-body { grid-template-columns: 1fr; }
+    .presenter-sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<!-- ═══════════════════════════ PLAYER SCREENS ═══════════════════════════ -->
+
+<!-- SCREEN 0: ACCUEIL -->
+<div id="screen-accueil" class="screen active">
+  <div class="header">
+    <div class="header-logo">
+      <img src="https://ddieoyfkliihvpqjgqfo.supabase.co/storage/v1/object/public/assets/logo.png"
+           onerror="this.style.display='none'" class="header-logo-img" alt="LexMatch">
+      <div class="header-title">LEX<span>MATCH</span></div>
+    </div>
+    <div class="header-badge">LE JEU</div>
+  </div>
+  <div class="content">
+    <div class="mascotte-wrap">
+      <img src="https://ddieoyfkliihvpqjgqfo.supabase.co/storage/v1/object/public/assets/mascotte.png"
+           onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚖️</text></svg>'"
+           class="mascotte-img" alt="Mascotte LexMatch">
+    </div>
+    <div style="text-align:center;">
+      <div class="title-cinzel title-xl">Connaissez-vous<br>le <span class="or-text">droit français ?</span></div>
+      <p class="subtitle" style="margin-top:12px;">Testez vos connaissances juridiques en <strong>quelques situations du quotidien</strong>. Serez-vous à la hauteur ?</p>
+    </div>
+    <div class="card">
+      <div class="title-cinzel title-md" style="margin-bottom:16px;">🎮 Comment jouer</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="benefit-row"><span class="benefit-icon">📜</span><span>Une <strong>situation juridique</strong> vous est présentée</span></div>
+        <div class="benefit-row"><span class="benefit-icon">🎯</span><span>Trouvez le <strong>domaine de droit</strong> parmi 4 propositions</span></div>
+        <div class="benefit-row"><span class="benefit-icon">🏆</span><span>Comparez votre score aux <strong>autres participants</strong></span></div>
+        <div class="benefit-row"><span class="benefit-icon">🍬</span><span>Gagnez des <strong>récompenses</strong> sur le stand !</span></div>
+      </div>
+    </div>
+    <button class="btn btn-or" onclick="showScreen('screen-pseudo')">🚀 Commencer le jeu</button>
+    <div class="footer">Propulsé par LexMatch — L'IA au service du droit</div>
+  </div>
+</div>
+
+<!-- SCREEN 1: PSEUDO -->
+<div id="screen-pseudo" class="screen">
+  <div class="header">
+    <div class="header-logo">
+      <div class="header-title">LEX<span>MATCH</span></div>
+    </div>
+    <div class="header-badge">LE JEU</div>
+  </div>
+  <div class="content">
+    <div style="text-align:center;padding-top:8px;">
+      <div class="title-cinzel title-xl">Bienvenue !</div>
+      <p class="subtitle" style="margin-top:8px;">Entrez votre pseudo pour commencer et apparaître sur le leaderboard</p>
+    </div>
+    <div class="card">
+      <div class="input-group">
+        <label class="input-label">Votre pseudo</label>
+        <input type="text" class="input" id="input-pseudo" placeholder="Ex: Marie D., Avocat42..." maxlength="20">
+      </div>
+    </div>
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">OPTIONS</div>
+      <div class="divider-line"></div>
+    </div>
+    <div class="card">
+      <div class="title-cinzel title-md" style="margin-bottom:14px;">Nombre de manches</div>
+      <div class="manche-selector">
+        <button class="manche-btn" onclick="changerManches(-1)">−</button>
+        <div>
+          <div class="manche-count" id="display-manches">3</div>
+          <div class="manche-label" style="text-align:center">manches</div>
+        </div>
+        <button class="manche-btn" onclick="changerManches(1)">+</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="title-cinzel title-md" style="margin-bottom:14px;">Mode de jeu</div>
+      <div class="mode-grid">
+        <div class="mode-card selected" onclick="selectMode('qcm')" id="mode-qcm">
+          <div class="mode-icon">🎯</div>
+          <div class="mode-info">
+            <div class="mode-name">QCM — 4 choix</div>
+            <div class="mode-desc">4 domaines proposés, 1 seul correct</div>
+          </div>
+          <div class="mode-badge badge-easy">FACILE</div>
+        </div>
+        <div class="mode-card" onclick="selectMode('difficile')" id="mode-difficile">
+          <div class="mode-icon">🔥</div>
+          <div class="mode-info">
+            <div class="mode-name">Mode Expert</div>
+            <div class="mode-desc">Parmi 8 domaines, trouvez le bon</div>
+          </div>
+          <div class="mode-badge badge-medium">DIFFICILE</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="validerPseudo()">⚖️ Lancer la partie</button>
+    <button class="btn btn-ghost" onclick="showScreen('screen-accueil')">← Retour</button>
+  </div>
+</div>
+
+<!-- SCREEN 2: JEU -->
+<div id="screen-jeu" class="screen">
+  <div class="header">
+    <div class="header-logo">
+      <div class="header-title">LEX<span>MATCH</span></div>
+    </div>
+    <div id="header-pseudo" class="header-badge">Joueur</div>
+  </div>
+  <div class="content">
+    <div class="progress-wrap" style="width:100%">
+      <div class="progress-info">
+        <span id="progress-label">Manche 1 / 3</span>
+        <span id="score-header" style="color:var(--or);font-weight:700;">0 pt</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+    <div id="jeu-content" style="width:100%;display:flex;flex-direction:column;gap:16px;align-items:center;">
+      <div class="loading"><div class="spinner"></div><p>Chargement...</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3: RÉSULTATS -->
+<div id="screen-resultats" class="screen">
+  <div class="header">
+    <div class="header-logo">
+      <div class="header-title">LEX<span>MATCH</span></div>
+    </div>
+    <div class="header-badge">RÉSULTATS</div>
+  </div>
+  <div class="content">
+    <div class="title-cinzel title-xl" style="text-align:center">Vos résultats <span class="or-text">⚖️</span></div>
+    <div style="display:flex;justify-content:center">
+      <div class="score-ring" id="score-ring" style="--pct:0%">
+        <div class="score-ring-inner">
+          <div class="score-num" id="score-final">0</div>
+          <div class="score-denom" id="score-sur">/ 0</div>
+        </div>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-pill">
+        <div class="stat-pill-num" id="stat-bonnes">0</div>
+        <div class="stat-pill-label">✅ Bonnes rép.</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-num" id="stat-mauvaises">0</div>
+        <div class="stat-pill-label">❌ Mauvaises rép.</div>
+      </div>
+    </div>
+    <div class="comparatif">
+      <div class="comparatif-pct" id="comparatif-pct">—</div>
+      <div class="comparatif-text" id="comparatif-text">Calcul en cours...</div>
+    </div>
+    <div class="card">
+      <div class="title-cinzel title-md" style="margin-bottom:12px;">💡 Le saviez-vous ?</div>
+      <p class="subtitle" style="text-align:left">Le droit français compte plus de <strong>60 branches spécialisées</strong>. Même les juristes expérimentés ne maîtrisent qu'une fraction de ces domaines. C'est précisément pour ça que <strong style="color:var(--bleu)">LexMatch</strong> existe.</p>
+    </div>
+    <button class="btn btn-or" onclick="showScreen('screen-fin')">Continuer →</button>
+  </div>
+</div>
+
+<!-- SCREEN 4: FIN -->
+<div id="screen-fin" class="screen">
+  <div class="header">
+    <div class="header-logo">
+      <div class="header-title">LEX<span>MATCH</span></div>
+    </div>
+    <div class="header-badge">FIN</div>
+  </div>
+  <div class="content">
+    <div class="mascotte-wrap">
+      <img src="https://ddieoyfkliihvpqjgqfo.supabase.co/storage/v1/object/public/assets/mascotte.png"
+           onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>'"
+           class="mascotte-img" alt="">
+    </div>
+    <div style="text-align:center">
+      <div class="title-cinzel title-xl">Merci d'avoir joué !</div>
+      <p class="subtitle" style="margin-top:8px">Restez informé des avancées de LexMatch et découvrez notre solution</p>
+    </div>
+    <div class="card">
+      <div class="title-cinzel title-md" style="margin-bottom:8px;">📬 Rejoindre la communauté</div>
+      <p class="subtitle" style="text-align:left;margin-bottom:16px">Newsletter & accès anticipé à la plateforme</p>
+      <div class="input-group">
+        <input type="email" class="input" id="input-email" placeholder="votre@email.fr">
+      </div>
+      <button class="btn btn-primary" style="margin-top:12px" onclick="soumettreEmail()">✉️ Je m'inscris</button>
+    </div>
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">DÉCOUVRIR LEXMATCH</div>
+      <div class="divider-line"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;width:100%">
+      <button class="btn btn-outline" onclick="window.open('https://lexmatch.fr','_blank')">🌐 Visiter notre site web</button>
+      <button class="btn btn-outline" onclick="window.open('https://lexmatch.fr/chatbot','_blank')">🤖 Tester le chatbot LexMatch</button>
+    </div>
+    <button class="btn btn-or" onclick="rejouer()">🔄 Rejouer une partie</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ PRESENTER ═══════════════════════════ -->
+
+<div id="screen-presenter" class="presenter-screen">
+  <div class="presenter-bg"></div>
+  <div class="presenter-header">
+    <div class="presenter-logo">
+      <img src="https://ddieoyfkliihvpqjgqfo.supabase.co/storage/v1/object/public/assets/logo.png"
+           onerror="this.style.display='none'" alt="LexMatch">
+      <div>
+        <div class="presenter-brand">LEX<span>MATCH</span></div>
+        <div class="presenter-subtitle">Le jeu juridique interactif</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:rgba(255,255,255,0.4);letter-spacing:1px;" id="presenter-time"></div>
+      <button class="back-btn" onclick="switchView('player')">← Vue joueur</button>
+    </div>
+  </div>
+  <div class="presenter-body">
+    <div class="presenter-main" id="presenter-main">
+      <div class="p-waiting">
+        <div class="p-waiting-icon">⚖️</div>
+        <div style="font-family:'Cinzel',serif;font-size:22px;color:rgba(255,255,255,0.6);margin-bottom:8px">Prêt pour une partie ?</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.3)">Sélectionnez une session dans la liste →</div>
+      </div>
+    </div>
+    <div class="presenter-sidebar">
+      <div class="qr-box">
+        <div class="qr-placeholder">
+          <div><div style="font-size:28px;margin-bottom:6px">📱</div><div>QR Code<br>votre URL ici</div></div>
+        </div>
+        <div class="qr-label">SCANNER POUR JOUER</div>
+        <div class="qr-url" id="presenter-url">lexmatch-jeu.vercel.app</div>
+      </div>
+      <div>
+        <div class="sessions-label">Sessions en cours</div>
+        <div class="sessions-list" id="presenter-sessions">
+          <div class="lb-empty">Aucune session active</div>
+        </div>
+      </div>
+      <div>
+        <div class="lb-title">🏆 Leaderboard</div>
+        <div class="lb-list" id="presenter-leaderboard">
+          <div class="lb-empty">Les scores apparaîtront ici</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PASSWORD MODAL ─── -->
+<div class="modal-overlay" id="modal-password">
+  <div class="modal-box">
+    <div class="modal-icon">🔐</div>
+    <div class="modal-title">Mode Présentateur</div>
+    <div class="modal-subtitle">Entrez le mot de passe pour accéder<br>à la vue présentateur</div>
+    <div class="input-group">
+      <input type="password" class="input" id="input-password" placeholder="Mot de passe..."
+             onkeydown="if(event.key==='Enter') verifierMotDePasse()">
+    </div>
+    <div class="modal-error" id="modal-error"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-ghost" style="flex:1" onclick="fermerModal()">Annuler</button>
+      <button class="btn btn-primary" style="flex:1" onclick="verifierMotDePasse()">Accéder</button>
+    </div>
+  </div>
+</div>
+
+<!-- View switcher -->
+<div class="view-switcher">
+  <button class="view-btn view-btn-player" onclick="switchView('player')" id="btn-view-player">👤 Joueur</button>
+  <button class="view-btn view-btn-presenter" onclick="demanderMotDePasse()" id="btn-view-presenter">📺 Présentateur</button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Confetti -->
+<div class="confetti-container" id="confetti"></div>
+
+<!-- ═══════════════════════════ JAVASCRIPT ═══════════════════════════ -->
+<script>
+// ─── CONFIG ───
+var SUPABASE_URL = 'https://ddieoyfkliihvpqjgqfo.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_XHkv0Tx7jqVCk5LPz8O2HA_taEL4RHw';
+var PRESENTER_PASSWORD = 'lexmatch38';
+
+// ─── STATE ───
+var state = {
+  pseudo: '',
+  nbManches: 3,
+  mode: 'qcm',
+  sessionId: null,
+  mancheActuelle: 1,
+  score: 0,
+  bonnes: 0,
+  mauvaises: 0,
+  situations: [],
+  situationsJouees: [],
+  situationCourante: null,
+  dejaRepondu: false,
+  currentView: 'player',
+  currentScreen: 'screen-accueil',
+  presenterSessionId: null,
+  presenterPollInterval: null,
+  presenterSessionsInterval: null,
+  presenterTimeInterval: null
+};
+
+// ─── SUPABASE ───
+function sbFetch(path, options) {
+  options = options || {};
+  var url = SUPABASE_URL + '/rest/v1' + path;
+  var headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  };
+  if (options.headers) {
+    Object.assign(headers, options.headers);
+  }
+  return fetch(url, {
+    method: options.method || 'GET',
+    headers: headers,
+    body: options.body || undefined
+  }).then(function(res) {
+    if (!res.ok) {
+      return res.text().then(function(t) { throw new Error(t); });
+    }
+    return res.text().then(function(t) { return t ? JSON.parse(t) : []; });
+  });
+}
+
+// ─── NAVIGATION ───
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) {
+    s.classList.remove('active');
+  });
+  var target = document.getElementById(id);
+  if (target) {
+    target.classList.add('active');
+    state.currentScreen = id;
+  }
+  window.scrollTo(0, 0);
+}
+
+// ─── MOT DE PASSE PRÉSENTATEUR ───
+function demanderMotDePasse() {
+  document.getElementById('input-password').value = '';
+  document.getElementById('modal-error').textContent = '';
+  document.getElementById('modal-password').classList.add('active');
+  setTimeout(function() { document.getElementById('input-password').focus(); }, 100);
+}
+
+function fermerModal() {
+  document.getElementById('modal-password').classList.remove('active');
+}
+
+function verifierMotDePasse() {
+  var mdp = document.getElementById('input-password').value;
+  if (mdp === PRESENTER_PASSWORD) {
+    fermerModal();
+    switchView('presenter');
+  } else {
+    document.getElementById('modal-error').textContent = '❌ Mot de passe incorrect';
+    document.getElementById('input-password').value = '';
+    document.getElementById('input-password').focus();
+  }
+}
+
+// ─── SWITCH VIEW ───
+function switchView(view) {
+  state.currentView = view;
+  var presenterScreen = document.getElementById('screen-presenter');
+
+  if (view === 'presenter') {
+    // Cacher tous les écrans joueur
+    document.querySelectorAll('.screen').forEach(function(s) {
+      s.style.display = 'none';
+    });
+    presenterScreen.classList.add('active');
+    document.getElementById('btn-view-player').style.cssText = 'background:rgba(255,255,255,0.15);color:white;';
+    document.getElementById('btn-view-presenter').style.cssText = 'background:var(--or);color:white;';
+    startPresenterPolling();
+  } else {
+    // Afficher les écrans joueur
+    document.querySelectorAll('.screen').forEach(function(s) {
+      s.style.display = '';
+    });
+    presenterScreen.classList.remove('active');
+    document.getElementById('btn-view-player').style.cssText = 'background:var(--bleu);color:white;';
+    document.getElementById('btn-view-presenter').style.cssText = 'background:rgba(255,255,255,0.15);color:white;';
+    stopPresenterPolling();
+    showScreen(state.currentScreen);
+  }
+}
+
+// ─── CONFIG JEU ───
+function changerManches(delta) {
+  state.nbManches = Math.min(4, Math.max(2, state.nbManches + delta));
+  document.getElementById('display-manches').textContent = state.nbManches;
+}
+
+function selectMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll('.mode-card').forEach(function(c) {
+    c.classList.remove('selected');
+  });
+  document.getElementById('mode-' + mode).classList.add('selected');
+}
+
+// ─── DÉMARRER LA PARTIE ───
+function validerPseudo() {
+  var pseudo = document.getElementById('input-pseudo').value.trim();
+  if (!pseudo) { showToast('Entrez un pseudo pour commencer !'); return; }
+  if (pseudo.length < 2) { showToast('Pseudo trop court (2 caractères min)'); return; }
+
+  state.pseudo = pseudo;
+  document.getElementById('header-pseudo').textContent = pseudo;
+
+  // Afficher loading
+  showScreen('screen-jeu');
+  document.getElementById('jeu-content').innerHTML = '<div class="loading"><div class="spinner"></div><p>Chargement...</p></div>';
+
+  // Créer la session Supabase
+  sbFetch('/sessions', {
+    method: 'POST',
+    body: JSON.stringify({
+      pseudo: pseudo,
+      nb_manches: state.nbManches,
+      manche_actuelle: 1,
+      score: 0,
+      statut: 'en_cours'
+    })
+  }).then(function(sessions) {
+    state.sessionId = sessions[0].id;
+    // Charger les situations
+    return sbFetch('/situations?select=*');
+  }).then(function(situations) {
+    state.situations = shuffleArray(situations);
+    state.situationsJouees = [];
+    state.mancheActuelle = 1;
+    state.score = 0;
+    state.bonnes = 0;
+    state.mauvaises = 0;
+    afficherManche();
+  }).catch(function(e) {
+    console.error(e);
+    showToast('Erreur de connexion. Réessayez.');
+    showScreen('screen-pseudo');
+  });
+}
+
+// ─── AFFICHER UNE MANCHE ───
+function afficherManche() {
+  state.dejaRepondu = false;
+
+  // Progression
+  var pct = ((state.mancheActuelle - 1) / state.nbManches) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = 'Manche ' + state.mancheActuelle + ' / ' + state.nbManches;
+  document.getElementById('score-header').textContent = state.score + ' pt';
+
+  // Piocher une situation non jouée
+  var restantes = state.situations.filter(function(s) {
+    return state.situationsJouees.indexOf(s.id) === -1;
+  });
+  if (restantes.length === 0) {
+    state.situationsJouees = [];
+    restantes = state.situations.slice();
+  }
+  var sit = restantes[Math.floor(Math.random() * restantes.length)];
+  state.situationCourante = sit;
+  state.situationsJouees.push(sit.id);
+
+  // Construire les choix
+  var choix;
+  if (state.mode === 'difficile') {
+    var autresBonnes = state.situations
+      .filter(function(s) { return s.id !== sit.id; })
+      .map(function(s) { return s.bonne_reponse; })
+      .filter(function(v, i, a) { return a.indexOf(v) === i && v !== sit.bonne_reponse; })
+      .slice(0, 7);
+    choix = shuffleArray([sit.bonne_reponse].concat(autresBonnes)).slice(0, 8);
+  } else {
+    choix = shuffleArray([sit.bonne_reponse, sit.mauvaise_reponse_1, sit.mauvaise_reponse_2, sit.mauvaise_reponse_3]);
+  }
+
+  // Mettre à jour la session dans Supabase
+  sbFetch('/sessions?id=eq.' + state.sessionId, {
+    method: 'PATCH',
+    body: JSON.stringify({ manche_actuelle: state.mancheActuelle })
+  }).catch(function() {});
+
+  // Afficher le HTML du jeu
+  var choixHTML = choix.map(function(c) {
+    var cEchap = c.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    return '<button class="choice-btn" onclick="repondre(this, \'' + cEchap + '\')">' + c + '</button>';
+  }).join('');
+
+  var gridStyle = state.mode === 'difficile' ? 'grid-template-columns: 1fr 1fr;' : 'grid-template-columns: 1fr 1fr;';
+
+  document.getElementById('jeu-content').innerHTML =
+    '<div class="situation-card" style="width:100%">' +
+      '<div class="situation-label">⚖ Situation juridique</div>' +
+      '<div class="situation-num">Manche ' + state.mancheActuelle + '</div>' +
+      '<div class="situation-text">' + sit.situation + '</div>' +
+    '</div>' +
+    '<div style="text-align:center;width:100%">' +
+      '<div style="font-size:12px;color:var(--gris);font-weight:600;letter-spacing:1px;text-transform:uppercase">Quel domaine de droit s\'applique ?</div>' +
+    '</div>' +
+    '<div class="choices-grid" id="choices-grid" style="' + gridStyle + 'width:100%">' +
+      choixHTML +
+    '</div>';
+}
+
+// ─── RÉPONDRE ───
+function repondre(btn, reponse) {
+  if (state.dejaRepondu) return;
+  state.dejaRepondu = true;
+
+  var sit = state.situationCourante;
+  var estCorrecte = (reponse === sit.bonne_reponse);
+
+  if (estCorrecte) {
+    state.score += 100;
+    state.bonnes++;
+  } else {
+    state.mauvaises++;
+  }
+
+  // Coloriser les boutons
+  var boutons = document.querySelectorAll('.choice-btn');
+  boutons.forEach(function(b) {
+    b.disabled = true;
+    if (b.textContent.trim() === sit.bonne_reponse) {
+      b.classList.add('correct');
+    } else if (b === btn && !estCorrecte) {
+      b.classList.add('incorrect');
+    }
+  });
+
+  // Afficher la révélation
+  var reveal = document.createElement('div');
+  reveal.className = 'result-reveal ' + (estCorrecte ? 'result-correct' : 'result-incorrect');
+  reveal.style.width = '100%';
+  reveal.innerHTML =
+    '<div class="result-emoji">' + (estCorrecte ? '✅' : '❌') + '</div>' +
+    '<div class="result-title">' + (estCorrecte ? 'Bonne réponse !' : 'Raté cette fois !') + '</div>' +
+    (!estCorrecte ? '<div class="result-bonne-rep">Bonne réponse : ' + sit.bonne_reponse + '</div>' : '') +
+    (sit.explication ? '<div class="result-explication">' + sit.explication + '</div>' : '');
+  document.getElementById('jeu-content').appendChild(reveal);
+
+  // Sauvegarder dans Supabase
+  sbFetch('/reponses', {
+    method: 'POST',
+    body: JSON.stringify({
+      session_id: state.sessionId,
+      situation_id: sit.id,
+      reponse_choisie: reponse,
+      est_correcte: estCorrecte
+    })
+  }).catch(function() {});
+
+  sbFetch('/sessions?id=eq.' + state.sessionId, {
+    method: 'PATCH',
+    body: JSON.stringify({ score: state.score })
+  }).catch(function() {});
+
+  // Mettre à jour le score en haut
+  document.getElementById('score-header').textContent = state.score + ' pt';
+
+  if (estCorrecte) lancerConfetti(false);
+
+  // Bouton suivant (après 800ms)
+  setTimeout(function() {
+    var btnSuivant = document.createElement('button');
+    btnSuivant.style.width = '100%';
+    btnSuivant.style.marginTop = '8px';
+
+    if (state.mancheActuelle >= state.nbManches) {
+      btnSuivant.className = 'btn btn-primary';
+      btnSuivant.innerHTML = '🏁 Voir mes résultats';
+      btnSuivant.onclick = terminerPartie;
+    } else {
+      btnSuivant.className = 'btn btn-primary';
+      btnSuivant.innerHTML = 'Manche suivante →';
+      btnSuivant.onclick = function() {
+        state.mancheActuelle++;
+        afficherManche();
+      };
+    }
+    document.getElementById('jeu-content').appendChild(btnSuivant);
+    window.scrollTo(0, document.body.scrollHeight);
+  }, 800);
+}
+
+// ─── TERMINER LA PARTIE ───
+function terminerPartie() {
+  sbFetch('/sessions?id=eq.' + state.sessionId, {
+    method: 'PATCH',
+    body: JSON.stringify({ statut: 'termine', score: state.score })
+  }).catch(function() {});
+
+  // Calculer comparatif
+  sbFetch('/sessions?statut=eq.termine&select=score').then(function(sessions) {
+    var scores = sessions.map(function(s) { return s.score; }).filter(function(s) { return s !== null; });
+    var mieux = scores.filter(function(s) { return s < state.score; }).length;
+    var pct = scores.length > 1 ? Math.round((mieux / (scores.length - 1)) * 100) : null;
+
+    document.getElementById('comparatif-pct').textContent = pct !== null ? pct + '%' : '🥇';
+    document.getElementById('comparatif-text').textContent = pct !== null
+      ? 'des participants ont fait moins bien que vous aujourd\'hui'
+      : 'Vous êtes le premier à terminer une partie !';
+  }).catch(function() {
+    document.getElementById('comparatif-pct').textContent = '⚖️';
+    document.getElementById('comparatif-text').textContent = 'Résultats enregistrés !';
+  });
+
+  // Afficher résultats
+  var pctScore = Math.round((state.bonnes / state.nbManches) * 100);
+  document.getElementById('score-final').textContent = state.score;
+  document.getElementById('score-sur').textContent = '/ ' + (state.nbManches * 100);
+  document.getElementById('stat-bonnes').textContent = state.bonnes;
+  document.getElementById('stat-mauvaises').textContent = state.mauvaises;
+  document.getElementById('score-ring').style.setProperty('--pct', pctScore + '%');
+
+  showScreen('screen-resultats');
+  if (state.bonnes === state.nbManches) lancerConfetti(true);
+}
+
+// ─── EMAIL ───
+function soumettreEmail() {
+  var email = document.getElementById('input-email').value.trim();
+  if (!email || email.indexOf('@') === -1) { showToast('Entrez un email valide'); return; }
+
+  sbFetch('/sessions?id=eq.' + state.sessionId, {
+    method: 'PATCH',
+    body: JSON.stringify({ email: email })
+  }).then(function() {
+    showToast('✅ Inscription enregistrée, merci !');
+    document.getElementById('input-email').disabled = true;
+    document.getElementById('input-email').value = '';
+    document.getElementById('input-email').placeholder = '✓ Enregistré';
+  }).catch(function() {
+    showToast('Erreur lors de l\'enregistrement');
+  });
+}
+
+function rejouer() {
+  state.sessionId = null;
+  state.mancheActuelle = 1;
+  state.score = 0;
+  state.bonnes = 0;
+  state.mauvaises = 0;
+  document.getElementById('input-pseudo').value = state.pseudo;
+  document.getElementById('input-email').disabled = false;
+  document.getElementById('input-email').placeholder = 'votre@email.fr';
+  showScreen('screen-pseudo');
+}
+
+// ─── PRÉSENTATEUR ───
+function startPresenterPolling() {
+  updatePresenterTime();
+  if (state.presenterTimeInterval) clearInterval(state.presenterTimeInterval);
+  state.presenterTimeInterval = setInterval(updatePresenterTime, 1000);
+
+  loadPresenterSessions();
+  loadLeaderboard();
+
+  if (state.presenterSessionsInterval) clearInterval(state.presenterSessionsInterval);
+  state.presenterSessionsInterval = setInterval(function() {
+    loadPresenterSessions();
+    loadLeaderboard();
+  }, 3000);
+
+  document.getElementById('presenter-url').textContent = window.location.href;
+}
+
+function stopPresenterPolling() {
+  if (state.presenterTimeInterval) clearInterval(state.presenterTimeInterval);
+  if (state.presenterSessionsInterval) clearInterval(state.presenterSessionsInterval);
+  if (state.presenterPollInterval) clearInterval(state.presenterPollInterval);
+}
+
+function updatePresenterTime() {
+  var el = document.getElementById('presenter-time');
+  if (el) {
+    var now = new Date();
+    el.textContent = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+}
+
+function loadPresenterSessions() {
+  sbFetch('/sessions?statut=eq.en_cours&order=created_at.desc&select=*').then(function(sessions) {
+    var el = document.getElementById('presenter-sessions');
+    if (!el) return;
+    if (!sessions.length) {
+      el.innerHTML = '<div class="lb-empty">Aucune session active</div>';
+      return;
+    }
+    el.innerHTML = sessions.map(function(s) {
+      return '<div class="session-card-p" onclick="selectPresenterSession(\'' + s.id + '\', \'' + s.pseudo.replace(/'/g, "\\'") + '\')">' +
+        '<div class="session-dot"></div>' +
+        '<div class="session-pseudo">' + s.pseudo + '</div>' +
+        '<div class="session-manche">M' + s.manche_actuelle + '/' + s.nb_manches + '</div>' +
+        '</div>';
+    }).join('');
+  }).catch(function() {});
+}
+
+function loadLeaderboard() {
+  sbFetch('/sessions?order=score.desc&limit=10&select=pseudo,score,statut').then(function(sessions) {
+    var el = document.getElementById('presenter-leaderboard');
+    if (!el) return;
+    if (!sessions.length) {
+      el.innerHTML = '<div class="lb-empty">Les scores apparaîtront ici</div>';
+      return;
+    }
+    var medailles = ['🥇', '🥈', '🥉'];
+    el.innerHTML = sessions.map(function(s, i) {
+      return '<div class="lb-row">' +
+        '<div class="lb-rank">' + (medailles[i] || (i + 1) + '.') + '</div>' +
+        '<div class="lb-pseudo">' + s.pseudo + '</div>' +
+        '<div class="lb-score">' + s.score + ' <span style="font-size:10px;opacity:0.6">pts</span></div>' +
+        '</div>';
+    }).join('');
+  }).catch(function() {});
+}
+
+function selectPresenterSession(sessionId, pseudo) {
+  state.presenterSessionId = sessionId;
+  if (state.presenterPollInterval) clearInterval(state.presenterPollInterval);
+  refreshPresenterLive();
+  state.presenterPollInterval = setInterval(refreshPresenterLive, 2500);
+}
+
+function refreshPresenterLive() {
+  var sessionId = state.presenterSessionId;
+  if (!sessionId) return;
+
+  Promise.all([
+    sbFetch('/sessions?id=eq.' + sessionId + '&select=*'),
+    sbFetch('/reponses?session_id=eq.' + sessionId + '&order=created_at.desc&limit=1&select=*,situations(*)')
+  ]).then(function(results) {
+    var sessions = results[0];
+    var reponses = results[1];
+    var session = sessions[0];
+    if (!session) return;
+
+    var derniereReponse = reponses[0];
+    var main = document.getElementById('presenter-main');
+    if (!main) return;
+
+    // Stats session
+    sbFetch('/reponses?session_id=eq.' + sessionId + '&select=est_correcte').then(function(toutesReponses) {
+      var bonnes = toutesReponses.filter(function(r) { return r.est_correcte; }).length;
+
+      var statsHtml =
+        '<div class="p-stats-row">' +
+          '<div class="p-stat"><div class="p-stat-num">' + session.score + '</div><div class="p-stat-label">Points</div></div>' +
+          '<div class="p-stat"><div class="p-stat-num">' + session.manche_actuelle + '/' + session.nb_manches + '</div><div class="p-stat-label">Manche</div></div>' +
+          '<div class="p-stat"><div class="p-stat-num">' + bonnes + '/' + toutesReponses.length + '</div><div class="p-stat-label">Réussites</div></div>' +
+        '</div>';
+
+      var situationHtml = '';
+      if (derniereReponse) {
+        var sit = derniereReponse.situations;
+        var choix = [sit.bonne_reponse, sit.mauvaise_reponse_1, sit.mauvaise_reponse_2, sit.mauvaise_reponse_3];
+        var choixHtml = choix.map(function(c) {
+          var cls = 'p-choice';
+          if (c === derniereReponse.reponse_choisie && derniereReponse.est_correcte) cls += ' correct-choice';
+          else if (c === derniereReponse.reponse_choisie && !derniereReponse.est_correcte) cls += ' incorrect-choice';
+          else if (c === sit.bonne_reponse && !derniereReponse.est_correcte) cls += ' correct-choice';
+          return '<div class="' + cls + '">' + c + '</div>';
+        }).join('');
+
+        situationHtml =
+          '<div class="presenter-situation">' +
+            '<div class="p-situation-label">📜 Dernière situation jouée</div>' +
+            '<div class="p-situation-text">' + sit.situation + '</div>' +
+          '</div>' +
+          '<div class="p-choices">' + choixHtml + '</div>' +
+          '<div style="font-size:14px;color:rgba(255,255,255,0.6);text-align:center;padding:4px 0">' +
+            (derniereReponse.est_correcte
+              ? '✅ Bonne réponse !'
+              : '❌ Raté — Bonne réponse : <strong style="color:var(--or-clair)">' + sit.bonne_reponse + '</strong>') +
+          '</div>';
+      } else {
+        situationHtml =
+          '<div class="p-waiting">' +
+            '<div class="p-waiting-icon">⏳</div>' +
+            '<div style="font-size:18px;color:rgba(255,255,255,0.5)">En attente de la première réponse...</div>' +
+          '</div>';
+      }
+
+      var statut = session.statut === 'termine' ? '✅ Partie terminée' : '🟢 En jeu...';
+
+      main.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:space-between">' +
+          '<div>' +
+            '<div class="p-player-name">👤 ' + session.pseudo + '</div>' +
+            '<div class="p-player-score">' + statut + '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;align-items:center">' +
+            '<div class="live-badge"><div class="live-dot"></div>LIVE</div>' +
+            '<button class="back-btn" onclick="retourPresenterAccueil()">← Retour</button>' +
+          '</div>' +
+        '</div>' +
+        statsHtml +
+        situationHtml;
+    }).catch(function() {});
+  }).catch(function(e) { console.error(e); });
+}
+
+function retourPresenterAccueil() {
+  if (state.presenterPollInterval) clearInterval(state.presenterPollInterval);
+  state.presenterSessionId = null;
+  document.getElementById('presenter-main').innerHTML =
+    '<div class="p-waiting">' +
+      '<div class="p-waiting-icon">⚖️</div>' +
+      '<div style="font-family:\'Cinzel\',serif;font-size:22px;color:rgba(255,255,255,0.6);margin-bottom:8px">Prêt pour une partie ?</div>' +
+      '<div style="font-size:14px;color:rgba(255,255,255,0.3)">Sélectionnez une session dans la liste →</div>' +
+    '</div>';
+}
+
+// ─── UTILS ───
+function shuffleArray(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+function lancerConfetti(plein) {
+  var colors = ['#0a1472', '#A07F4C', '#c9a96e', '#f7f7f7', '#2ecc71'];
+  var container = document.getElementById('confetti');
+  var n = plein ? 80 : 25;
+  for (var i = 0; i < n; i++) {
+    (function() {
+      var c = document.createElement('div');
+      c.className = 'confetto';
+      var size = (4 + Math.random() * 8) + 'px';
+      c.style.cssText =
+        'left:' + (Math.random() * 100) + 'vw;' +
+        'top:-10px;' +
+        'background:' + colors[Math.floor(Math.random() * colors.length)] + ';' +
+        'width:' + size + ';' +
+        'height:' + size + ';' +
+        'animation-duration:' + (1.5 + Math.random() * 2) + 's;' +
+        'animation-delay:' + (Math.random() * 0.5) + 's;' +
+        'border-radius:' + (Math.random() > 0.5 ? '50%' : '2px') + ';';
+      container.appendChild(c);
+      c.addEventListener('animationend', function() { c.remove(); });
+    })();
+  }
+}
+
+// ─── INIT ───
+document.addEventListener('DOMContentLoaded', function() {
+  showScreen('screen-accueil');
+  document.getElementById('presenter-url').textContent = window.location.href;
+
+  // Enter sur le champ pseudo
+  document.getElementById('input-pseudo').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') validerPseudo();
+  });
+});
+</script>
+</body>
+</html>
     --bleu-fonce: #060d4e;
     --or: #A07F4C;
     --or-clair: #c9a96e;
