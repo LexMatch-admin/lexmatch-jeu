@@ -176,6 +176,17 @@ body{font-family:'Montserrat',sans-serif;background:var(--blanc);color:var(--ble
 .pres-timer-bar-fill{height:100%;border-radius:3px;transition:width 0.1s linear,background 0.5s ease;}
 .pres-timer-num{font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:var(--or-clair);min-width:28px;text-align:right;}
 .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px;gap:14px;}
+/* Multi-réponses */
+.multi-hint{width:100%;text-align:center;font-size:12px;font-weight:700;color:var(--or);letter-spacing:0.5px;padding:6px 12px;background:rgba(160,127,76,0.08);border-radius:var(--radius-sm);border:1px dashed rgba(160,127,76,0.3);}
+.choice-btn.multi-selected{border-color:var(--bleu);background:rgba(10,20,114,0.08);box-shadow:0 0 0 2px rgba(10,20,114,0.2);}
+.choice-btn.multi-selected::before{content:'✓ ';color:var(--bleu);}
+.btn-valider{background:linear-gradient(135deg,var(--bleu),var(--bleu-clair));color:#fff;box-shadow:0 4px 16px rgba(10,20,114,0.3);}
+.btn-valider:disabled{background:var(--gris-clair);color:var(--gris);box-shadow:none;cursor:not-allowed;}
+/* Diff badge */
+.diff-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-left:6px;}
+.diff-facile{background:rgba(46,204,113,0.15);color:#27ae60;}
+.diff-moyen{background:rgba(160,127,76,0.15);color:var(--or);}
+.diff-juriste{background:rgba(231,76,60,0.15);color:var(--rouge);}
 .spinner{width:38px;height:38px;border:3px solid rgba(10,20,114,0.1);border-top-color:var(--or);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .confetti-wrap{position:fixed;inset:0;pointer-events:none;z-index:999;}
@@ -243,27 +254,43 @@ body{font-family:'Montserrat',sans-serif;background:var(--blanc);color:var(--ble
     </div>
     <div class="divider"><div class="divider-line"></div><div class="divider-text">OPTIONS</div><div class="divider-line"></div></div>
     <div class="card">
-      <div class="title-c t-md" style="margin-bottom:14px">Nombre de manches</div>
-      <div class="manche-sel">
+      <div class="title-c t-md" style="margin-bottom:6px">Nombre de manches</div>
+      <div class="manche-sel" style="margin-top:12px">
         <button class="manche-btn" onclick="chgManches(-1)">−</button>
         <div><div class="manche-count" id="disp-manches">3</div><div style="font-size:12px;color:var(--gris);text-align:center">manches</div></div>
         <button class="manche-btn" onclick="chgManches(1)">+</button>
       </div>
+      <div style="font-size:11px;color:var(--or);text-align:center;margin-top:10px;font-weight:600">Plus vous jouez de manches, plus vous pouvez marquer de points.</div>
     </div>
     <div class="card">
-      <div class="title-c t-md" style="margin-bottom:14px">Mode de jeu</div>
+      <div class="title-c t-md" style="margin-bottom:14px">Niveau de difficulté</div>
       <div class="mode-grid">
-        <div class="mode-card selected" onclick="selMode('qcm')" id="mode-qcm">
-          <div class="mode-icon">🎯</div>
-          <div class="mode-info"><div class="mode-name">QCM — 4 choix</div><div class="mode-desc">4 domaines proposés, 1 seul correct</div></div>
-          <div class="mode-badge badge-easy">FACILE</div>
+        <div class="mode-card selected" onclick="selDiff('facile')" id="diff-facile">
+          <div class="mode-icon">🟢</div>
+          <div class="mode-info">
+            <div class="mode-name">Facile</div>
+            <div class="mode-desc">4 choix, 1 seule bonne réponse — ×1</div>
+          </div>
+          <div class="mode-badge badge-easy">×1.0</div>
         </div>
-        <div class="mode-card" onclick="selMode('expert')" id="mode-expert">
-          <div class="mode-icon">🔥</div>
-          <div class="mode-info"><div class="mode-name">Mode Expert</div><div class="mode-desc">Parmi 8 domaines, trouvez le bon</div></div>
-          <div class="mode-badge badge-med">DIFFICILE</div>
+        <div class="mode-card" onclick="selDiff('moyen')" id="diff-moyen">
+          <div class="mode-icon">🟡</div>
+          <div class="mode-info">
+            <div class="mode-name">Moyen</div>
+            <div class="mode-desc">Mix 4 et 8 choix, parfois multi-réponses</div>
+          </div>
+          <div class="mode-badge badge-med">×1.2</div>
+        </div>
+        <div class="mode-card" onclick="selDiff('juriste')" id="diff-juriste">
+          <div class="mode-icon">🔴</div>
+          <div class="mode-info">
+            <div class="mode-name">Juriste</div>
+            <div class="mode-desc">Questions difficiles et multi-réponses</div>
+          </div>
+          <div class="mode-badge" style="background:rgba(231,76,60,0.15);color:var(--rouge)">×1.4</div>
         </div>
       </div>
+      <div style="font-size:11px;color:var(--or);text-align:center;margin-top:10px;font-weight:600">Plus la difficulté est élevée, plus vous marquez de points.</div>
     </div>
     <button class="btn btn-primary" onclick="lancerPartie()">⚖️ Lancer la partie</button>
     <button class="btn btn-ghost" onclick="goTo('s-accueil')">← Retour</button>
@@ -434,13 +461,14 @@ var SB_KEY = 'sb_publishable_XHkv0Tx7jqVCk5LPz8O2HA_taEL4RHw';
 var MDP = 'lexmatch38';
 
 var G = {
-  pseudo: '', nbManches: 3, mode: 'qcm',
+  pseudo: '', nbManches: 3, diff: 'facile',
   sessionId: null, manche: 1, score: 0, bonnes: 0, mauvaises: 0,
   situations: [], jouees: [], sitCourante: null, repondu: false,
+  manchesExpert: [], selectionMulti: [],
   timerStart: 0, timerIntv: null,
   vue: 'player', ecranActuel: 's-accueil',
   presSessionId: null, presIntv: null, presLbIntv: null, presTimeIntv: null,
-  presTimerStart: 0, presTimerIntv: null
+  presTimerStart: 0, presTimerIntv: null, _presTimerManche: null, presTimerTickIntv: null
 };
 
 // ── API ──
@@ -512,14 +540,17 @@ function switchView(vue) {
 }
 
 // ── CONFIG JEU ──
+var DIFF_MULTI = { facile: 1, moyen: 2, juriste: 3 }; // nb de questions expert par session
+var DIFF_MULT  = { facile: 1.0, moyen: 1.2, juriste: 1.4 };
+
 function chgManches(d) {
   G.nbManches = Math.min(4, Math.max(2, G.nbManches + d));
   document.getElementById('disp-manches').textContent = G.nbManches;
 }
-function selMode(m) {
-  G.mode = m;
+function selDiff(d) {
+  G.diff = d;
   document.querySelectorAll('.mode-card').forEach(function(c) { c.classList.remove('selected'); });
-  document.getElementById('mode-' + m).classList.add('selected');
+  document.getElementById('diff-' + d).classList.add('selected');
 }
 
 // ── LANCER PARTIE ──
@@ -554,6 +585,15 @@ function lancerPartie() {
   }).then(function(sits) {
     G.situations = shuffle(sits);
     G.jouees = []; G.manche = 1; G.score = 0; G.bonnes = 0; G.mauvaises = 0;
+    G.selectionMulti = [];
+    // Déterminer quelles manches seront "expert" selon la difficulté
+    var nbExpert = DIFF_MULTI[G.diff] || 0;
+    var indices = [];
+    while (indices.length < Math.min(nbExpert, G.nbManches)) {
+      var r = Math.floor(Math.random() * G.nbManches) + 1;
+      if (indices.indexOf(r) === -1) indices.push(r);
+    }
+    G.manchesExpert = indices;
     afficherManche();
   }).catch(function(e) {
     if (e !== 'doublon') {
@@ -564,8 +604,12 @@ function lancerPartie() {
   });
 }
 
+// ── DIFF CONFIG ──
+var DIFF_MULTI = { facile: 1, moyen: 2, juriste: 3 };
+var DIFF_MULT  = { facile: 1.0, moyen: 1.2, juriste: 1.4 };
+
 // ── TIMER ──
-var TIMER_MAX = 12; // secondes
+var TIMER_MAX = 12;
 var TIMER_PTS_MAX = 100;
 var TIMER_PTS_MIN = 50;
 
@@ -573,106 +617,205 @@ function calcPoints() {
   var elapsed = (Date.now() - G.timerStart) / 1000;
   if (elapsed <= 0) return TIMER_PTS_MAX;
   if (elapsed >= TIMER_MAX) return TIMER_PTS_MIN;
-  var pts = Math.round(TIMER_PTS_MAX - ((TIMER_PTS_MAX - TIMER_PTS_MIN) * elapsed / TIMER_MAX));
-  return Math.max(TIMER_PTS_MIN, Math.min(TIMER_PTS_MAX, pts));
+  return Math.max(TIMER_PTS_MIN, Math.round(TIMER_PTS_MAX - ((TIMER_PTS_MAX - TIMER_PTS_MIN) * elapsed / TIMER_MAX)));
 }
-
-function startTimer() {
-  G.timerStart = Date.now();
-  G.timerIntv = setInterval(tickTimer, 100);
-}
-
-function stopTimer() {
-  if (G.timerIntv) { clearInterval(G.timerIntv); G.timerIntv = null; }
-}
-
+function startTimer() { G.timerStart = Date.now(); G.timerIntv = setInterval(tickTimer, 100); }
+function stopTimer() { if (G.timerIntv) { clearInterval(G.timerIntv); G.timerIntv = null; } }
 function tickTimer() {
   var elapsed = (Date.now() - G.timerStart) / 1000;
   var pct = Math.max(0, 1 - elapsed / TIMER_MAX);
   var pts = calcPoints();
-
-  // Couleur : vert → orange → rouge
+  var mult = DIFF_MULT[G.diff] || 1;
   var color = pct > 0.5 ? '#2ecc71' : pct > 0.25 ? '#f39c12' : '#e74c3c';
-
   var barEl = document.getElementById('timer-bar');
   var numEl = document.getElementById('timer-num');
   var ptsEl = document.getElementById('timer-pts');
   if (barEl) { barEl.style.width = (pct * 100) + '%'; barEl.style.background = color; }
   if (numEl) { numEl.textContent = Math.max(0, Math.ceil(TIMER_MAX - elapsed)) + 's'; numEl.style.color = color; }
-  if (ptsEl) { ptsEl.textContent = pts + ' pts max'; }
-
-  // Côté présentateur
+  if (ptsEl) { ptsEl.textContent = Math.round(pts * mult) + ' pts max'; }
   var presBar = document.getElementById('pres-timer-bar');
   var presNum = document.getElementById('pres-timer-num');
   var presPts = document.getElementById('pres-timer-pts');
   if (presBar) { presBar.style.width = (pct * 100) + '%'; presBar.style.background = color; }
   if (presNum) { presNum.textContent = Math.max(0, Math.ceil(TIMER_MAX - elapsed)) + 's'; presNum.style.color = color; }
-  if (presPts) { presPts.textContent = pts + ' pts max'; }
+  if (presPts) { presPts.textContent = Math.round(pts * mult) + ' pts max'; }
 }
 
 // ── MANCHE ──
 function afficherManche() {
   G.repondu = false;
+  G.selectionMulti = [];
   stopTimer();
   var pct = ((G.manche - 1) / G.nbManches) * 100;
   document.getElementById('prog-fill').style.width = pct + '%';
   document.getElementById('prog-label').textContent = 'Manche ' + G.manche + ' / ' + G.nbManches;
   document.getElementById('score-hdr').textContent = G.score + ' pt';
 
-  var restantes = G.situations.filter(function(s) { return G.jouees.indexOf(s.id) === -1; });
-  if (!restantes.length) { G.jouees = []; restantes = G.situations.slice(); }
-  var sit = restantes[Math.floor(Math.random() * restantes.length)];
+  var estExpert = (G.manchesExpert.indexOf(G.manche) !== -1);
+
+  // Piocher une situation adaptee
+  var pool;
+  if (estExpert) {
+    pool = G.situations.filter(function(s) { return s.expert === true && G.jouees.indexOf(s.id) === -1; });
+    if (!pool.length) pool = G.situations.filter(function(s) { return G.jouees.indexOf(s.id) === -1; });
+  } else {
+    pool = G.situations.filter(function(s) { return !s.expert && G.jouees.indexOf(s.id) === -1; });
+    if (!pool.length) pool = G.situations.filter(function(s) { return G.jouees.indexOf(s.id) === -1; });
+  }
+  if (!pool.length) { G.jouees = []; pool = G.situations.slice(); }
+
+  var sit = pool[Math.floor(Math.random() * pool.length)];
   G.sitCourante = sit;
   G.jouees.push(sit.id);
+  var estMulti = sit.expert === true;
 
-  var choix;
-  if (G.mode === 'expert') {
-    var autres = G.situations.filter(function(s) { return s.id !== sit.id; })
-      .map(function(s) { return s.bonne_reponse; })
-      .filter(function(v, i, a) { return a.indexOf(v) === i && v !== sit.bonne_reponse; })
-      .slice(0, 7);
-    choix = shuffle([sit.bonne_reponse].concat(autres)).slice(0, 8);
-  } else {
-    choix = shuffle([sit.bonne_reponse, sit.mauvaise_reponse_1, sit.mauvaise_reponse_2, sit.mauvaise_reponse_3]);
-  }
+  // Bonnes reponses
+  var bonnes = [sit.bonne_reponse];
+  if (estMulti && sit.bonne_reponse_2) bonnes.push(sit.bonne_reponse_2);
+  if (estMulti && sit.bonne_reponse_3) bonnes.push(sit.bonne_reponse_3);
+  G.sitCourante._bonnes = bonnes;
+
+  // Mauvaises reponses
+  var mauvaises = [sit.mauvaise_reponse_1, sit.mauvaise_reponse_2, sit.mauvaise_reponse_3];
+  if (sit.mauvaise_reponse_4) mauvaises.push(sit.mauvaise_reponse_4);
+  if (sit.mauvaise_reponse_5) mauvaises.push(sit.mauvaise_reponse_5);
+  if (sit.mauvaise_reponse_6) mauvaises.push(sit.mauvaise_reponse_6);
+  var choix = shuffle(bonnes.concat(mauvaises.filter(Boolean)));
 
   api('/sessions?id=eq.' + G.sessionId, { method: 'PATCH', body: JSON.stringify({ manche_actuelle: G.manche }) }).catch(function(){});
+
+  var diffLabel = { facile: '🟢 Facile', moyen: '🟡 Moyen', juriste: '🔴 Juriste' }[G.diff] || '';
+  var expertTag = estMulti ? ' <span class="diff-badge diff-juriste">Multi-reponses</span>' : '';
+  var hintHtml = estMulti
+    ? '<div class="multi-hint">Selectionnez <strong>' + bonnes.length + ' bonne' + (bonnes.length > 1 ? 's' : '') + ' reponse' + (bonnes.length > 1 ? 's' : '') + '</strong> puis validez</div>'
+    : '';
+  var mult = DIFF_MULT[G.diff] || 1;
+  var ptsMax = Math.round(TIMER_PTS_MAX * mult);
 
   var btns = choix.map(function(c) {
     var safe = c.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     var safeJs = c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    return '<button class="choice-btn" onclick="repondre(this,\'' + safeJs + '\')">' + safe + '</button>';
+    if (estMulti) {
+      return '<button class="choice-btn" onclick="toggleMulti(this,\'' + safeJs + '\')">' + safe + '</button>';
+    } else {
+      return '<button class="choice-btn" onclick="repondre(this,\'' + safeJs + '\')">' + safe + '</button>';
+    }
   }).join('');
+
+  var validerHtml = estMulti
+    ? '<button class="btn btn-valider" id="btn-valider" onclick="validerMulti()" disabled>Valider mes reponses (<span id="nb-sel">0</span>/' + bonnes.length + ')</button>'
+    : '';
 
   document.getElementById('jeu-content').innerHTML =
     '<div class="sit-card" style="width:100%">' +
-      '<div class="sit-label">⚖ Situation juridique</div>' +
-      '<div class="sit-num">Manche ' + G.manche + '</div>' +
+      '<div class="sit-label">Situation juridique' + expertTag + '</div>' +
+      '<div class="sit-num">' + diffLabel + ' - Manche ' + G.manche + '</div>' +
       '<div class="sit-text">' + sit.situation + '</div>' +
     '</div>' +
     '<div class="timer-wrap" style="width:100%">' +
       '<div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-bar" style="width:100%"></div></div>' +
       '<div class="timer-num" id="timer-num">' + TIMER_MAX + 's</div>' +
-      '<div class="timer-pts" id="timer-pts">100 pts max</div>' +
+      '<div class="timer-pts" id="timer-pts">' + ptsMax + ' pts max</div>' +
     '</div>' +
+    hintHtml +
     '<div style="text-align:center;width:100%;font-size:12px;color:var(--gris);font-weight:600;letter-spacing:1px;text-transform:uppercase">Quel domaine de droit s\'applique ?</div>' +
-    '<div class="choices-grid" style="width:100%">' + btns + '</div>';
+    '<div class="choices-grid" style="width:100%">' + btns + '</div>' +
+    validerHtml;
 
-  // Démarrer le timer APRÈS que le DOM est rendu
   setTimeout(startTimer, 50);
 }
 
-// ── RÉPONDRE ──
+// ── TOGGLE MULTI ──
+function toggleMulti(btn, rep) {
+  if (G.repondu) return;
+  var bonnes = G.sitCourante._bonnes;
+  var idx = G.selectionMulti.indexOf(rep);
+  if (idx === -1) {
+    if (G.selectionMulti.length >= bonnes.length) {
+      toast('Selectionnez exactement ' + bonnes.length + ' reponse' + (bonnes.length > 1 ? 's' : ''));
+      return;
+    }
+    G.selectionMulti.push(rep);
+    btn.classList.add('multi-selected');
+  } else {
+    G.selectionMulti.splice(idx, 1);
+    btn.classList.remove('multi-selected');
+  }
+  var nbSrc = document.getElementById('nb-sel');
+  if (nbSrc) nbSrc.textContent = G.selectionMulti.length;
+  var btnVal = document.getElementById('btn-valider');
+  if (btnVal) btnVal.disabled = (G.selectionMulti.length !== bonnes.length);
+}
+
+// ── VALIDER MULTI ──
+function validerMulti() {
+  if (G.repondu) return;
+  var bonnes = G.sitCourante._bonnes;
+  var toutesOk = bonnes.every(function(b) { return G.selectionMulti.indexOf(b) !== -1; }) && G.selectionMulti.length === bonnes.length;
+  G.repondu = true;
+  stopTimer();
+  var sit = G.sitCourante;
+  var elapsed = (Date.now() - G.timerStart) / 1000;
+  var basePts = toutesOk ? calcPoints() : 0;
+  var mult = DIFF_MULT[G.diff] || 1;
+  var pts = Math.round(basePts * mult);
+  if (toutesOk) { G.score += pts; G.bonnes++; } else { G.mauvaises++; }
+
+  document.querySelectorAll('.choice-btn').forEach(function(b) {
+    b.disabled = true;
+    b.classList.remove('multi-selected');
+    var t = b.textContent.trim();
+    if (bonnes.indexOf(t) !== -1) b.classList.add('correct');
+    else if (G.selectionMulti.indexOf(t) !== -1) b.classList.add('incorrect');
+  });
+  var btnVal = document.getElementById('btn-valider');
+  if (btnVal) btnVal.disabled = true;
+
+  var barEl = document.getElementById('timer-bar');
+  var numEl = document.getElementById('timer-num');
+  var ptsEl = document.getElementById('timer-pts');
+  if (barEl) barEl.style.transition = 'none';
+  if (numEl) numEl.textContent = Math.round(elapsed * 10) / 10 + 's';
+  if (ptsEl) { ptsEl.textContent = toutesOk ? '+' + pts + ' pts !' : '0 pt'; ptsEl.style.color = toutesOk ? 'var(--vert)' : 'var(--rouge)'; }
+
+  var bonnesStr = bonnes.join(' + ');
+  var reveal = document.createElement('div');
+  reveal.className = 'reveal ' + (toutesOk ? 'reveal-ok' : 'reveal-ko');
+  reveal.style.width = '100%';
+  var ptsTxt = toutesOk ? '<div style="font-size:13px;font-weight:700;color:var(--vert);margin-bottom:4px">+' + pts + ' points en ' + Math.round(elapsed * 10) / 10 + 's</div>' : '';
+  var repTxt = !toutesOk ? '<div class="reveal-rep">Bonnes reponses : ' + bonnesStr + '</div>' : '<div style="font-size:12px;color:var(--or);margin-bottom:4px;font-weight:600">Reponses : ' + bonnesStr + '</div>';
+  var exp = sit.explication ? '<div class="reveal-exp">' + sit.explication + '</div>' : '';
+  reveal.innerHTML = '<div class="reveal-emoji">' + (toutesOk ? '✅' : '❌') + '</div>' +
+    '<div class="reveal-title">' + (toutesOk ? 'Toutes les bonnes reponses !' : 'Pas tout a fait !') + '</div>' +
+    ptsTxt + repTxt + exp;
+  document.getElementById('jeu-content').appendChild(reveal);
+
+  api('/reponses', { method: 'POST', body: JSON.stringify({ session_id: G.sessionId, situation_id: sit.id, reponse_choisie: G.selectionMulti.join(' | '), est_correcte: toutesOk, temps_reponse: Math.round(elapsed * 10) / 10 }) }).catch(function(){});
+  api('/sessions?id=eq.' + G.sessionId, { method: 'PATCH', body: JSON.stringify({ score: G.score }) }).catch(function(){});
+  document.getElementById('score-hdr').textContent = G.score + ' pt';
+  if (toutesOk) confetti(false);
+
+  setTimeout(function() {
+    var btn2 = document.createElement('button');
+    btn2.style.width = '100%'; btn2.style.marginTop = '8px'; btn2.className = 'btn btn-primary';
+    if (G.manche >= G.nbManches) { btn2.innerHTML = '🏁 Voir mes resultats'; btn2.onclick = terminer; }
+    else { btn2.innerHTML = 'Manche suivante →'; btn2.onclick = function() { G.manche++; afficherManche(); }; }
+    document.getElementById('jeu-content').appendChild(btn2);
+    window.scrollTo(0, document.body.scrollHeight);
+  }, 800);
+}
+
+// ── REPONDRE (questions standard) ──
 function repondre(btn, rep) {
   if (G.repondu) return;
   G.repondu = true;
   stopTimer();
-
   var sit = G.sitCourante;
   var ok = (rep === sit.bonne_reponse);
-  var pts = ok ? calcPoints() : 0;
   var elapsed = (Date.now() - G.timerStart) / 1000;
-
+  var basePts = ok ? calcPoints() : 0;
+  var mult = DIFF_MULT[G.diff] || 1;
+  var pts = Math.round(basePts * mult);
   if (ok) { G.score += pts; G.bonnes++; } else { G.mauvaises++; }
 
   document.querySelectorAll('.choice-btn').forEach(function(b) {
@@ -682,22 +825,21 @@ function repondre(btn, rep) {
     else if (b === btn && !ok) b.classList.add('incorrect');
   });
 
-  // Figer le timer
   var barEl = document.getElementById('timer-bar');
   var numEl = document.getElementById('timer-num');
   var ptsEl = document.getElementById('timer-pts');
-  if (barEl) { barEl.style.transition = 'none'; }
-  if (numEl) { numEl.textContent = Math.round(elapsed * 10) / 10 + 's'; }
+  if (barEl) barEl.style.transition = 'none';
+  if (numEl) numEl.textContent = Math.round(elapsed * 10) / 10 + 's';
   if (ptsEl) { ptsEl.textContent = ok ? '+' + pts + ' pts !' : '0 pt'; ptsEl.style.color = ok ? 'var(--vert)' : 'var(--rouge)'; }
 
   var reveal = document.createElement('div');
   reveal.className = 'reveal ' + (ok ? 'reveal-ok' : 'reveal-ko');
   reveal.style.width = '100%';
+  var ptsTxt = ok ? '<div style="font-size:13px;font-weight:700;color:var(--vert);margin-bottom:4px">+' + pts + ' points en ' + Math.round(elapsed * 10) / 10 + 's</div>' : '';
+  var repTxt = !ok ? '<div class="reveal-rep">Bonne reponse : ' + sit.bonne_reponse + '</div>' : '';
   var exp = sit.explication ? '<div class="reveal-exp">' + sit.explication + '</div>' : '';
-  var repTxt = !ok ? '<div class="reveal-rep">Bonne réponse : ' + sit.bonne_reponse + '</div>' : '';
-  var ptsTxt = ok ? '<div style="font-size:13px;font-weight:700;color:var(--vert);margin-bottom:4px">⚡ ' + pts + ' points en ' + Math.round(elapsed * 10) / 10 + 's</div>' : '';
   reveal.innerHTML = '<div class="reveal-emoji">' + (ok ? '✅' : '❌') + '</div>' +
-    '<div class="reveal-title">' + (ok ? 'Bonne réponse !' : 'Raté cette fois !') + '</div>' +
+    '<div class="reveal-title">' + (ok ? 'Bonne reponse !' : 'Rate cette fois !') + '</div>' +
     ptsTxt + repTxt + exp;
   document.getElementById('jeu-content').appendChild(reveal);
 
@@ -708,15 +850,9 @@ function repondre(btn, rep) {
 
   setTimeout(function() {
     var btn2 = document.createElement('button');
-    btn2.style.width = '100%'; btn2.style.marginTop = '8px';
-    btn2.className = 'btn btn-primary';
-    if (G.manche >= G.nbManches) {
-      btn2.innerHTML = '🏁 Voir mes résultats';
-      btn2.onclick = terminer;
-    } else {
-      btn2.innerHTML = 'Manche suivante →';
-      btn2.onclick = function() { G.manche++; afficherManche(); };
-    }
+    btn2.style.width = '100%'; btn2.style.marginTop = '8px'; btn2.className = 'btn btn-primary';
+    if (G.manche >= G.nbManches) { btn2.innerHTML = '🏁 Voir mes resultats'; btn2.onclick = terminer; }
+    else { btn2.innerHTML = 'Manche suivante →'; btn2.onclick = function() { G.manche++; afficherManche(); }; }
     document.getElementById('jeu-content').appendChild(btn2);
     window.scrollTo(0, document.body.scrollHeight);
   }, 800);
@@ -736,9 +872,11 @@ function terminer() {
     document.getElementById('comp-text').textContent = 'Résultats enregistrés !';
   });
 
-  var p = Math.round((G.bonnes / G.nbManches) * 100);
+  var mult = DIFF_MULT[G.diff] || 1;
+  var scoreMax = Math.round(G.nbManches * TIMER_PTS_MAX * mult);
+  var p = Math.round((G.score / scoreMax) * 100);
   document.getElementById('score-final').textContent = G.score;
-  document.getElementById('score-sur').textContent = '/ ' + (G.nbManches * 100);
+  document.getElementById('score-sur').textContent = '/ ' + scoreMax;
   document.getElementById('stat-ok').textContent = G.bonnes;
   document.getElementById('stat-ko').textContent = G.mauvaises;
   document.getElementById('score-ring').style.setProperty('--pct', p + '%');
@@ -761,6 +899,7 @@ function submitEmail() {
 function rejouer() {
   G.sessionId = null; G.manche = 1; G.score = 0; G.bonnes = 0; G.mauvaises = 0;
   document.getElementById('inp-pseudo').value = G.pseudo;
+  G.manchesExpert = []; G.selectionMulti = [];
   document.getElementById('pseudo-error').textContent = '';
   document.getElementById('inp-email').disabled = false;
   document.getElementById('inp-email').value = '';
