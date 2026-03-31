@@ -165,6 +165,16 @@ body{font-family:'Montserrat',sans-serif;background:var(--blanc);color:var(--ble
 .vbtn{padding:7px 14px;border-radius:100px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;transition:all 0.2s;letter-spacing:0.5px;}
 .vbtn-p{background:var(--bleu);color:#fff;}
 .vbtn-pr{background:rgba(255,255,255,0.15);color:#fff;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);}
+.timer-wrap{width:100%;display:flex;align-items:center;gap:14px;}
+.timer-bar-bg{flex:1;height:8px;background:var(--gris-clair);border-radius:4px;overflow:hidden;}
+.timer-bar-fill{height:100%;border-radius:4px;transition:width 0.1s linear,background 0.5s ease;background:var(--vert);}
+.timer-num{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--bleu);min-width:32px;text-align:right;}
+.timer-pts{font-size:12px;font-weight:600;color:var(--or);min-width:60px;text-align:right;}
+/* Presenter timer */
+.pres-timer-wrap{display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-sm);}
+.pres-timer-bar-bg{flex:1;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;}
+.pres-timer-bar-fill{height:100%;border-radius:3px;transition:width 0.1s linear,background 0.5s ease;}
+.pres-timer-num{font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:var(--or-clair);min-width:28px;text-align:right;}
 .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px;gap:14px;}
 .spinner{width:38px;height:38px;border:3px solid rgba(10,20,114,0.1);border-top-color:var(--or);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -370,8 +380,8 @@ body{font-family:'Montserrat',sans-serif;background:var(--blanc);color:var(--ble
     <div class="pres-main" id="pres-main">
       <div class="p-waiting">
         <div class="p-wait-icon">⚖️</div>
-        <div style="font-family:'Cinzel',serif;font-size:20px;color:rgba(255,255,255,0.5);margin-bottom:8px">Prêt pour une partie ?</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.25)">Sélectionnez une session dans la liste →</div>
+        <div style="font-family:'Cinzel',serif;font-size:28px;font-weight:700;color:#ffffff;margin-bottom:12px;text-shadow:0 2px 20px rgba(160,127,76,0.4)">Prêt pour une partie ?</div>
+        <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.5px">Sélectionnez une session dans la liste →</div>
       </div>
     </div>
     <div class="pres-side">
@@ -427,8 +437,10 @@ var G = {
   pseudo: '', nbManches: 3, mode: 'qcm',
   sessionId: null, manche: 1, score: 0, bonnes: 0, mauvaises: 0,
   situations: [], jouees: [], sitCourante: null, repondu: false,
+  timerStart: 0, timerIntv: null,
   vue: 'player', ecranActuel: 's-accueil',
-  presSessionId: null, presIntv: null, presLbIntv: null, presTimeIntv: null
+  presSessionId: null, presIntv: null, presLbIntv: null, presTimeIntv: null,
+  presTimerStart: 0, presTimerIntv: null
 };
 
 // ── API ──
@@ -552,9 +564,56 @@ function lancerPartie() {
   });
 }
 
+// ── TIMER ──
+var TIMER_MAX = 12; // secondes
+var TIMER_PTS_MAX = 100;
+var TIMER_PTS_MIN = 50;
+
+function calcPoints() {
+  var elapsed = (Date.now() - G.timerStart) / 1000;
+  if (elapsed <= 0) return TIMER_PTS_MAX;
+  if (elapsed >= TIMER_MAX) return TIMER_PTS_MIN;
+  var pts = Math.round(TIMER_PTS_MAX - ((TIMER_PTS_MAX - TIMER_PTS_MIN) * elapsed / TIMER_MAX));
+  return Math.max(TIMER_PTS_MIN, Math.min(TIMER_PTS_MAX, pts));
+}
+
+function startTimer() {
+  G.timerStart = Date.now();
+  G.timerIntv = setInterval(tickTimer, 100);
+}
+
+function stopTimer() {
+  if (G.timerIntv) { clearInterval(G.timerIntv); G.timerIntv = null; }
+}
+
+function tickTimer() {
+  var elapsed = (Date.now() - G.timerStart) / 1000;
+  var pct = Math.max(0, 1 - elapsed / TIMER_MAX);
+  var pts = calcPoints();
+
+  // Couleur : vert → orange → rouge
+  var color = pct > 0.5 ? '#2ecc71' : pct > 0.25 ? '#f39c12' : '#e74c3c';
+
+  var barEl = document.getElementById('timer-bar');
+  var numEl = document.getElementById('timer-num');
+  var ptsEl = document.getElementById('timer-pts');
+  if (barEl) { barEl.style.width = (pct * 100) + '%'; barEl.style.background = color; }
+  if (numEl) { numEl.textContent = Math.max(0, Math.ceil(TIMER_MAX - elapsed)) + 's'; numEl.style.color = color; }
+  if (ptsEl) { ptsEl.textContent = pts + ' pts max'; }
+
+  // Côté présentateur
+  var presBar = document.getElementById('pres-timer-bar');
+  var presNum = document.getElementById('pres-timer-num');
+  var presPts = document.getElementById('pres-timer-pts');
+  if (presBar) { presBar.style.width = (pct * 100) + '%'; presBar.style.background = color; }
+  if (presNum) { presNum.textContent = Math.max(0, Math.ceil(TIMER_MAX - elapsed)) + 's'; presNum.style.color = color; }
+  if (presPts) { presPts.textContent = pts + ' pts max'; }
+}
+
 // ── MANCHE ──
 function afficherManche() {
   G.repondu = false;
+  stopTimer();
   var pct = ((G.manche - 1) / G.nbManches) * 100;
   document.getElementById('prog-fill').style.width = pct + '%';
   document.getElementById('prog-label').textContent = 'Manche ' + G.manche + ' / ' + G.nbManches;
@@ -591,17 +650,30 @@ function afficherManche() {
       '<div class="sit-num">Manche ' + G.manche + '</div>' +
       '<div class="sit-text">' + sit.situation + '</div>' +
     '</div>' +
+    '<div class="timer-wrap" style="width:100%">' +
+      '<div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-bar" style="width:100%"></div></div>' +
+      '<div class="timer-num" id="timer-num">' + TIMER_MAX + 's</div>' +
+      '<div class="timer-pts" id="timer-pts">100 pts max</div>' +
+    '</div>' +
     '<div style="text-align:center;width:100%;font-size:12px;color:var(--gris);font-weight:600;letter-spacing:1px;text-transform:uppercase">Quel domaine de droit s\'applique ?</div>' +
     '<div class="choices-grid" style="width:100%">' + btns + '</div>';
+
+  // Démarrer le timer APRÈS que le DOM est rendu
+  setTimeout(startTimer, 50);
 }
 
 // ── RÉPONDRE ──
 function repondre(btn, rep) {
   if (G.repondu) return;
   G.repondu = true;
+  stopTimer();
+
   var sit = G.sitCourante;
   var ok = (rep === sit.bonne_reponse);
-  if (ok) { G.score += 100; G.bonnes++; } else { G.mauvaises++; }
+  var pts = ok ? calcPoints() : 0;
+  var elapsed = (Date.now() - G.timerStart) / 1000;
+
+  if (ok) { G.score += pts; G.bonnes++; } else { G.mauvaises++; }
 
   document.querySelectorAll('.choice-btn').forEach(function(b) {
     b.disabled = true;
@@ -610,16 +682,26 @@ function repondre(btn, rep) {
     else if (b === btn && !ok) b.classList.add('incorrect');
   });
 
+  // Figer le timer
+  var barEl = document.getElementById('timer-bar');
+  var numEl = document.getElementById('timer-num');
+  var ptsEl = document.getElementById('timer-pts');
+  if (barEl) { barEl.style.transition = 'none'; }
+  if (numEl) { numEl.textContent = Math.round(elapsed * 10) / 10 + 's'; }
+  if (ptsEl) { ptsEl.textContent = ok ? '+' + pts + ' pts !' : '0 pt'; ptsEl.style.color = ok ? 'var(--vert)' : 'var(--rouge)'; }
+
   var reveal = document.createElement('div');
   reveal.className = 'reveal ' + (ok ? 'reveal-ok' : 'reveal-ko');
   reveal.style.width = '100%';
   var exp = sit.explication ? '<div class="reveal-exp">' + sit.explication + '</div>' : '';
   var repTxt = !ok ? '<div class="reveal-rep">Bonne réponse : ' + sit.bonne_reponse + '</div>' : '';
+  var ptsTxt = ok ? '<div style="font-size:13px;font-weight:700;color:var(--vert);margin-bottom:4px">⚡ ' + pts + ' points en ' + Math.round(elapsed * 10) / 10 + 's</div>' : '';
   reveal.innerHTML = '<div class="reveal-emoji">' + (ok ? '✅' : '❌') + '</div>' +
-    '<div class="reveal-title">' + (ok ? 'Bonne réponse !' : 'Raté cette fois !') + '</div>' + repTxt + exp;
+    '<div class="reveal-title">' + (ok ? 'Bonne réponse !' : 'Raté cette fois !') + '</div>' +
+    ptsTxt + repTxt + exp;
   document.getElementById('jeu-content').appendChild(reveal);
 
-  api('/reponses', { method: 'POST', body: JSON.stringify({ session_id: G.sessionId, situation_id: sit.id, reponse_choisie: rep, est_correcte: ok }) }).catch(function(){});
+  api('/reponses', { method: 'POST', body: JSON.stringify({ session_id: G.sessionId, situation_id: sit.id, reponse_choisie: rep, est_correcte: ok, temps_reponse: Math.round(elapsed * 10) / 10 }) }).catch(function(){});
   api('/sessions?id=eq.' + G.sessionId, { method: 'PATCH', body: JSON.stringify({ score: G.score }) }).catch(function(){});
   document.getElementById('score-hdr').textContent = G.score + ' pt';
   if (ok) confetti(false);
@@ -749,13 +831,46 @@ function refreshPresLive() {
   ]).then(function(res) {
     var sess = res[0][0]; var reps = res[1]; if (!sess) return;
     var last = reps[0];
-    api('/reponses?session_id=eq.' + id + '&select=est_correcte').then(function(all) {
+    api('/reponses?session_id=eq.' + id + '&select=est_correcte,temps_reponse').then(function(all) {
       var bon = all.filter(function(r) { return r.est_correcte; }).length;
+
+      // Calcul temps moyen
+      var temps = all.filter(function(r) { return r.temps_reponse != null; }).map(function(r) { return r.temps_reponse; });
+      var tempsMoyen = temps.length ? (temps.reduce(function(a,b){return a+b;},0) / temps.length).toFixed(1) : '—';
+
       var stats = '<div class="p-stats">' +
         '<div class="p-stat"><div class="p-stat-num">' + sess.score + '</div><div class="p-stat-label">Points</div></div>' +
         '<div class="p-stat"><div class="p-stat-num">' + sess.manche_actuelle + '/' + sess.nb_manches + '</div><div class="p-stat-label">Manche</div></div>' +
         '<div class="p-stat"><div class="p-stat-num">' + bon + '/' + all.length + '</div><div class="p-stat-label">Réussites</div></div>' +
+        '<div class="p-stat"><div class="p-stat-num">' + tempsMoyen + 's</div><div class="p-stat-label">Tps moyen</div></div>' +
         '</div>';
+
+      // Timer live (uniquement si session en cours et une réponse récente < 15s)
+      var timerHtml = '';
+      if (sess.statut === 'en_cours') {
+        // On démarre le timer présentateur à chaque nouvelle manche
+        var lastReponseAge = last ? (Date.now() - new Date(last.created_at).getTime()) / 1000 : 999;
+        var mancheEnCours = (all.length < sess.manche_actuelle); // la manche n'a pas encore de réponse
+        if (mancheEnCours) {
+          // Estimer le début de la manche : dernière réponse + ~1s
+          if (!G.presTimerStart || G._presTimerManche !== sess.manche_actuelle) {
+            G.presTimerStart = last ? (new Date(last.created_at).getTime() + 1200) : Date.now();
+            G._presTimerManche = sess.manche_actuelle;
+            // Démarrer le tick du timer présentateur
+            if (G.presTimerTickIntv) clearInterval(G.presTimerTickIntv);
+            G.presTimerTickIntv = setInterval(tickPresTimer, 200);
+          }
+          timerHtml = '<div class="pres-timer-wrap">' +
+            '<span style="font-size:12px;color:rgba(255,255,255,0.7);font-weight:600;white-space:nowrap">⏱ Timer joueur</span>' +
+            '<div class="pres-timer-bar-bg"><div class="pres-timer-bar-fill" id="pres-timer-bar" style="width:100%;background:var(--vert)"></div></div>' +
+            '<div class="pres-timer-num" id="pres-timer-num">' + TIMER_MAX + 's</div>' +
+            '<div class="pres-timer-pts" id="pres-timer-pts">100 pts max</div>' +
+            '</div>';
+        } else {
+          if (G.presTimerTickIntv) { clearInterval(G.presTimerTickIntv); G.presTimerTickIntv = null; }
+        }
+      }
+
       var sitHtml = '';
       if (last) {
         var s = last.situations;
@@ -768,14 +883,17 @@ function refreshPresLive() {
           var safeC = c.replace(/&/g,'&amp;').replace(/</g,'&lt;');
           return '<div class="' + cl + '">' + safeC + '</div>';
         }).join('');
+        var tempsRep = last.temps_reponse ? ' en <strong>' + last.temps_reponse + 's</strong>' : '';
         sitHtml = '<div class="pres-sit"><div class="pres-sit-label">📜 Dernière situation jouée</div>' +
           '<div class="pres-sit-text">' + s.situation + '</div></div>' +
           '<div class="p-choices">' + choixH + '</div>' +
-          '<div style="font-size:13px;color:rgba(255,255,255,0.55);text-align:center;padding:4px 0">' +
-          (last.est_correcte ? '✅ Bonne réponse !' : '❌ Raté — Bonne réponse : <strong style="color:var(--or-clair)">' + s.bonne_reponse + '</strong>') +
+          '<div style="font-size:14px;color:rgba(255,255,255,0.75);text-align:center;padding:4px 0">' +
+          (last.est_correcte
+            ? '✅ Bonne réponse' + tempsRep + (last.temps_reponse ? ' — <strong style="color:var(--or-clair)">' + Math.max(50, Math.round(100 - (100-50)*last.temps_reponse/12)) + ' pts</strong>' : '')
+            : '❌ Raté — Bonne réponse : <strong style="color:var(--or-clair)">' + s.bonne_reponse + '</strong>') +
           '</div>';
       } else {
-        sitHtml = '<div class="p-waiting"><div class="p-wait-icon">⏳</div><div style="font-size:17px;color:rgba(255,255,255,0.4)">En attente de la première réponse...</div></div>';
+        sitHtml = '<div class="p-waiting"><div class="p-wait-icon">⏳</div><div style="font-size:18px;font-weight:600;color:rgba(255,255,255,0.6)">En attente de la première réponse...</div></div>';
       }
       var safePseudo = sess.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
       document.getElementById('pres-main').innerHTML =
@@ -785,17 +903,31 @@ function refreshPresLive() {
           '<div style="display:flex;gap:10px;align-items:center">' +
           '<div class="live-badge"><div class="live-dot"></div>LIVE</div>' +
           '<button class="back-btn" onclick="retourPres()">← Retour</button></div></div>' +
-        stats + sitHtml;
+        stats + timerHtml + sitHtml;
     }).catch(function(){});
   }).catch(function(e) { console.error(e); });
+}
+
+function tickPresTimer() {
+  if (!G.presTimerStart) return;
+  var elapsed = (Date.now() - G.presTimerStart) / 1000;
+  var pct = Math.max(0, 1 - elapsed / TIMER_MAX);
+  var pts = Math.max(TIMER_PTS_MIN, Math.round(TIMER_PTS_MAX - ((TIMER_PTS_MAX - TIMER_PTS_MIN) * elapsed / TIMER_MAX)));
+  var color = pct > 0.5 ? '#2ecc71' : pct > 0.25 ? '#f39c12' : '#e74c3c';
+  var bar = document.getElementById('pres-timer-bar');
+  var num = document.getElementById('pres-timer-num');
+  var pts2 = document.getElementById('pres-timer-pts');
+  if (bar) { bar.style.width = (pct * 100) + '%'; bar.style.background = color; }
+  if (num) { num.textContent = Math.max(0, Math.ceil(TIMER_MAX - elapsed)) + 's'; num.style.color = color; }
+  if (pts2) { pts2.textContent = pts + ' pts max'; }
 }
 function retourPres() {
   if (G.presIntv) clearInterval(G.presIntv);
   G.presSessionId = null;
   document.getElementById('pres-main').innerHTML =
     '<div class="p-waiting"><div class="p-wait-icon">⚖️</div>' +
-    '<div style="font-family:\'Cinzel\',serif;font-size:20px;color:rgba(255,255,255,0.5);margin-bottom:8px">Prêt pour une partie ?</div>' +
-    '<div style="font-size:13px;color:rgba(255,255,255,0.25)">Sélectionnez une session dans la liste →</div></div>';
+    '<div style="font-family:\'Cinzel\',serif;font-size:28px;font-weight:700;color:#ffffff;margin-bottom:12px;text-shadow:0 2px 20px rgba(160,127,76,0.4)">Prêt pour une partie ?</div>' +
+    '<div style="font-size:16px;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.5px">Sélectionnez une session dans la liste →</div></div>';
 }
 
 // ── UTILS ──
