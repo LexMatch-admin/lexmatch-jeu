@@ -447,19 +447,15 @@ body{font-family:'Montserrat',sans-serif;background:var(--blanc);color:var(--ble
     <div class="global-stat"><div class="global-stat-num" id="gs-actives">0</div><div class="global-stat-label">Sessions actives</div></div>
   </div>
 
-  <!-- Zone sessions ouvertes (panels multi) -->
-  <div class="pres-sessions-area" id="pres-sessions-area" style="display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <div style="font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--or-clair);letter-spacing:2px;text-transform:uppercase">Sessions ouvertes</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.4)">Cliquez sur une session pour l'ouvrir / fermer</div>
-    </div>
-    <div class="pres-sessions-grid" id="pres-panels-grid"></div>
-  </div>
-
   <!-- Body principal -->
-  <div class="pres-body" style="overflow:auto">
-    <div class="pres-main" id="pres-main">
-      <div class="p-waiting">
+  <div class="pres-body" style="overflow:hidden">
+    <div class="pres-main" id="pres-main" style="overflow-y:auto">
+      <!-- Zone panels sessions (dans le main, pas au-dessus) -->
+      <div id="pres-panels-container" style="display:none">
+        <div style="font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--or-clair);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">Sessions ouvertes</div>
+        <div class="pres-sessions-grid" id="pres-panels-grid"></div>
+      </div>
+      <div id="pres-waiting" class="p-waiting">
         <div class="p-wait-icon">&#9878;&#65039;</div>
         <div style="font-family:'Cinzel',serif;font-size:28px;font-weight:700;color:#ffffff;margin-bottom:12px;text-shadow:0 2px 20px rgba(160,127,76,0.4)">Pr&#234;t pour une partie ?</div>
         <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.5px">Cliquez sur une session dans la liste pour l'ouvrir &#8594;</div>
@@ -632,7 +628,7 @@ function lancerPartie() {
     }
     return api('/sessions', {
       method: 'POST',
-      body: JSON.stringify({ pseudo: pseudo, nb_manches: G.nbManches, manche_actuelle: 1, score: 0, statut: 'en_cours' })
+      body: JSON.stringify({ pseudo: pseudo, nb_manches: G.nbManches, manche_actuelle: 1, score: 0, statut: 'en_cours', difficulte: G.diff })
     });
   }).then(function(sess) {
     G.sessionId = sess[0].id;
@@ -829,29 +825,36 @@ function appliquerJoker() {
   G.timerGele = true;
   stopTimer();
 
-  // Figer le timer visuellement (le temps ne compte plus)
+  // FIX : on ignore totalement le temps écoulé — on part du score MAX possible
+  var mult = DIFF_MULT[G.diff] || 1;
+  var ptsBase = TIMER_PTS_MAX; // toujours 100 pts de base, temps ignoré
+  var ptsAvecJoker = Math.max(1, Math.round(ptsBase * mult) - 25);
+  // On gèle à TIMER_PTS_MAX pour que calcPoints() retourne la valeur max
+  G._jokerPtsGeles = TIMER_PTS_MAX;
+
   var barEl = document.getElementById('timer-bar');
   var numEl = document.getElementById('timer-num');
   var ptsEl = document.getElementById('timer-pts');
-  var mult = DIFF_MULT[G.diff] || 1;
-  var ptsActuels = calcPoints();
-  var ptsAvecJoker = Math.max(1, Math.round(ptsActuels * mult) - 25);
-  if (barEl) { barEl.style.background = 'var(--or)'; barEl.style.width = '100%'; }
+  if (barEl) { barEl.style.background = 'var(--or)'; barEl.style.width = '100%'; barEl.style.transition = 'none'; }
   if (numEl) { numEl.textContent = '∞'; numEl.style.color = 'var(--or)'; }
   if (ptsEl) { ptsEl.textContent = ptsAvecJoker + ' pts max'; ptsEl.style.color = 'var(--or)'; }
 
   // Badge joker actif
   var jokerWrap = document.getElementById('joker-wrap');
-  if (jokerWrap) jokerWrap.innerHTML = '<div class="joker-actif-badge">&#127484; Joker actif — Score gelé (-25 pts)</div>';
+  if (jokerWrap) jokerWrap.innerHTML = '<div class="joker-actif-badge">&#127484; Joker actif — Temps gelé (-25 pts)</div>';
 
-  // Supprimer la moitié des mauvaises réponses
+  // FIX : supprimer exactement 2 mauvaises (standard) ou 4 (expert)
   var sit = G.sitCourante;
   var bonnes = sit._bonnes || [sit.bonne_reponse];
-  var boutons = Array.prototype.slice.call(document.querySelectorAll('.choice-btn'));
+  var estExpert = sit.expert === true;
+  var nbASupprimer = estExpert ? 4 : 2; // fixe : 2 pour standard, 4 pour expert
+
+  var boutons = Array.prototype.slice.call(document.querySelectorAll('.choice-btn:not(:disabled)'));
   var mauvaisBoutons = boutons.filter(function(b) {
     return bonnes.indexOf(b.textContent.trim()) === -1;
   });
-  var nbASupprimer = Math.floor(mauvaisBoutons.length / 2);
+  // S'assurer de ne pas supprimer plus qu'il n'y en a
+  nbASupprimer = Math.min(nbASupprimer, mauvaisBoutons.length);
   var asupprimer = shuffle(mauvaisBoutons).slice(0, nbASupprimer);
   asupprimer.forEach(function(b) {
     b.style.opacity = '0.2';
@@ -860,10 +863,7 @@ function appliquerJoker() {
     b.disabled = true;
   });
 
-  toast('&#127484; Joker activé ! ' + nbASupprimer + ' mauvaise(s) réponse(s) supprimée(s). Le temps est gelé.');
-
-  // Mettre à jour le calcul de points pour qu'il retourne la valeur gelée
-  G._jokerPtsGeles = ptsActuels;
+  toast('Joker ! ' + nbASupprimer + ' mauvaise(s) réponse(s) retirée(s). Temps gelé. Max : ' + ptsAvecJoker + ' pts');
 
   // Marquer joker consommé sur Supabase
   api('/sessions?id=eq.' + G.sessionId, {
@@ -1120,10 +1120,14 @@ function loadPressSessions() {
       var safe = s.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
       var safeJs = s.pseudo.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       var isOpen = G.presSessionIds.indexOf(s.id) !== -1;
+      var diffIcon = { facile: '🟢', moyen: '🟡', juriste: '🔴' }[s.difficulte] || '⚪';
       return '<div class="sess-card' + (isOpen ? ' active-panel' : '') + '" onclick="togglePresSession(\'' + s.id + '\',\'' + safeJs + '\')">' +
         '<div class="sess-dot"></div>' +
         '<div class="sess-pseudo">' + safe + '</div>' +
-        '<div class="sess-manche">M' + s.manche_actuelle + '/' + s.nb_manches + (isOpen ? ' ✓' : '') + '</div></div>';
+        '<div style="display:flex;align-items:center;gap:5px">' +
+          '<span style="font-size:12px">' + diffIcon + '</span>' +
+          '<div class="sess-manche">M' + s.manche_actuelle + '/' + s.nb_manches + (isOpen ? ' ✓' : '') + '</div>' +
+        '</div></div>';
     }).join('');
   }).catch(function(){});
 }
@@ -1155,11 +1159,19 @@ function closePanel(id) {
 }
 
 function renderPanels() {
-  var area = document.getElementById('pres-sessions-area');
+  var container = document.getElementById('pres-panels-container');
   var grid = document.getElementById('pres-panels-grid');
-  if (!grid || !area) return;
-  if (!G.presSessionIds.length) { area.style.display = 'none'; return; }
-  area.style.display = 'block';
+  var waiting = document.getElementById('pres-waiting');
+  if (!grid || !container) return;
+
+  if (!G.presSessionIds.length) {
+    container.style.display = 'none';
+    if (waiting) waiting.style.display = 'flex';
+    return;
+  }
+  container.style.display = 'block';
+  if (waiting) waiting.style.display = 'none';
+
   // Créer/màj les panels
   var existing = {};
   Array.prototype.forEach.call(grid.querySelectorAll('.sess-panel'), function(p) {
@@ -1176,7 +1188,7 @@ function renderPanels() {
       div.className = 'sess-panel';
       div.dataset.sessId = id;
       div.id = 'panel-' + id;
-      div.innerHTML = '<div class="p-waiting" style="padding:20px"><div class="spinner"></div></div>';
+      div.innerHTML = '<div style="padding:20px;text-align:center"><div class="spinner" style="margin:0 auto"></div></div>';
       grid.appendChild(div);
     }
   });
@@ -1197,6 +1209,7 @@ function refreshPanel(id) {
     var temps = allReps.filter(function(r) { return r.temps_reponse != null; }).map(function(r) { return r.temps_reponse; });
     var tMoyen = temps.length ? (temps.reduce(function(a,b){return a+b;},0)/temps.length).toFixed(1) : '—';
     var safePseudo = sess.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    var diffLabel = { facile: '🟢 Facile', moyen: '🟡 Moyen', juriste: '🔴 Juriste' }[sess.difficulte] || '⚪ —';
 
     // Dernière situation
     var sitResume = '';
