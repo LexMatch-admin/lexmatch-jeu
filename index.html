@@ -190,6 +190,38 @@ body{font-family:'Montserrat',sans-serif;background:var(--blanc);color:var(--ble
 .spinner{width:38px;height:38px;border:3px solid rgba(10,20,114,0.1);border-top-color:var(--or);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .confetti-wrap{position:fixed;inset:0;pointer-events:none;z-index:999;}
+/* ── MODULE 3 : Présentateur multi-sessions ── */
+.pres-sessions-area{padding:16px 36px;border-bottom:1px solid rgba(160,127,76,0.15);background:rgba(0,0,0,0.1);}
+.pres-sessions-grid{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;}
+.sess-panel{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius);padding:18px;min-width:280px;flex:1;max-width:380px;position:relative;animation:fadeIn 0.3s ease;}
+.sess-panel.active-panel{border-color:rgba(160,127,76,0.5);background:rgba(160,127,76,0.07);}
+.sess-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sess-panel-pseudo{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:#fff;}
+.sess-panel-close{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.sess-panel-close:hover{background:rgba(231,76,60,0.3);color:#ff9090;}
+.sess-panel-stats{display:flex;gap:8px;margin-bottom:10px;}
+.sess-mini-stat{flex:1;background:rgba(255,255,255,0.05);border-radius:var(--radius-sm);padding:8px;text-align:center;}
+.sess-mini-num{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--or-clair);}
+.sess-mini-label{font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;}
+.sess-panel-sit{font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5;font-style:italic;margin-bottom:10px;border-left:2px solid rgba(160,127,76,0.4);padding-left:8px;}
+.sess-panel-btns{display:flex;gap:6px;}
+.sess-panel-btn{flex:1;padding:7px 10px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;transition:all 0.2s;letter-spacing:0.5px;}
+.btn-joker{background:rgba(160,127,76,0.2);border:1px solid rgba(160,127,76,0.4);color:var(--or-clair);}
+.btn-joker:hover{background:rgba(160,127,76,0.35);}
+.btn-joker:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-classer{background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.3);color:#6fffa8;}
+.btn-classer:hover{background:rgba(46,204,113,0.25);}
+.pres-global-stats{display:flex;gap:12px;padding:12px 36px;border-bottom:1px solid rgba(160,127,76,0.1);background:rgba(0,0,0,0.08);}
+.global-stat{flex:1;text-align:center;}
+.global-stat-num{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:var(--or-clair);}
+.global-stat-label{font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+/* Joker côté joueur */
+.joker-btn-wrap{width:100%;display:flex;justify-content:center;}
+.btn-joker-joueur{display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--radius-sm);background:linear-gradient(135deg,rgba(160,127,76,0.15),rgba(160,127,76,0.08));border:1px dashed rgba(160,127,76,0.5);color:var(--or);font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;}
+.btn-joker-joueur:hover{background:rgba(160,127,76,0.2);border-color:var(--or);}
+.btn-joker-joueur:disabled{opacity:0.3;cursor:not-allowed;}
+.joker-actif-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(160,127,76,0.2);border:1px solid var(--or);border-radius:100px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--or);animation:pulse-or 1.5s infinite;}
+@keyframes pulse-or{0%,100%{box-shadow:0 0 0 0 rgba(160,127,76,0.4);}50%{box-shadow:0 0 0 8px rgba(160,127,76,0);}}
 .confetto{position:absolute;animation:fall linear forwards;}
 @keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
 .footer{text-align:center;padding:14px;font-size:11px;color:rgba(10,20,114,0.3);}
@@ -393,27 +425,49 @@ body{font-family:'Montserrat',sans-serif;background:var(--blanc);color:var(--ble
 <!-- PRESENTER -->
 <div id="s-presenter" class="pres-screen">
   <div class="pres-bg"><div class="pres-bg-fond"></div></div>
+
+  <!-- Header -->
   <div class="pres-header">
     <div class="pres-logo">
       <img src="https://ddieoyfkliihvpqjgqfo.supabase.co/storage/v1/object/public/assets/logo.png" alt="LexMatch" onerror="this.style.display='none'">
       <div><div class="pres-brand">LEX<span>MATCH</span></div><div class="pres-sub">Le jeu juridique interactif</div></div>
     </div>
     <div style="display:flex;align-items:center;gap:14px">
-      <div style="font-family:'Cinzel',serif;font-size:13px;color:rgba(255,255,255,0.35)" id="pres-time"></div>
-      <button class="back-btn" onclick="switchView('player')">← Vue joueur</button>
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:rgba(255,255,255,0.65);font-weight:600" id="pres-time"></div>
+      <button class="back-btn" onclick="switchView('player')">&#8592; Vue joueur</button>
     </div>
   </div>
-  <div class="pres-body">
+
+  <!-- Stats globales temps réel -->
+  <div class="pres-global-stats" id="pres-global-stats">
+    <div class="global-stat"><div class="global-stat-num" id="gs-joueurs">0</div><div class="global-stat-label">Joueurs aujourd'hui</div></div>
+    <div class="global-stat"><div class="global-stat-num" id="gs-parties">0</div><div class="global-stat-label">Parties terminées</div></div>
+    <div class="global-stat"><div class="global-stat-num" id="gs-pct">—</div><div class="global-stat-label">% bonnes réponses</div></div>
+    <div class="global-stat"><div class="global-stat-num" id="gs-score">—</div><div class="global-stat-label">Score moyen</div></div>
+    <div class="global-stat"><div class="global-stat-num" id="gs-actives">0</div><div class="global-stat-label">Sessions actives</div></div>
+  </div>
+
+  <!-- Zone sessions ouvertes (panels multi) -->
+  <div class="pres-sessions-area" id="pres-sessions-area" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--or-clair);letter-spacing:2px;text-transform:uppercase">Sessions ouvertes</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4)">Cliquez sur une session pour l'ouvrir / fermer</div>
+    </div>
+    <div class="pres-sessions-grid" id="pres-panels-grid"></div>
+  </div>
+
+  <!-- Body principal -->
+  <div class="pres-body" style="overflow:auto">
     <div class="pres-main" id="pres-main">
       <div class="p-waiting">
-        <div class="p-wait-icon">⚖️</div>
-        <div style="font-family:'Cinzel',serif;font-size:28px;font-weight:700;color:#ffffff;margin-bottom:12px;text-shadow:0 2px 20px rgba(160,127,76,0.4)">Prêt pour une partie ?</div>
-        <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.5px">Sélectionnez une session dans la liste →</div>
+        <div class="p-wait-icon">&#9878;&#65039;</div>
+        <div style="font-family:'Cinzel',serif;font-size:28px;font-weight:700;color:#ffffff;margin-bottom:12px;text-shadow:0 2px 20px rgba(160,127,76,0.4)">Pr&#234;t pour une partie ?</div>
+        <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.5px">Cliquez sur une session dans la liste pour l'ouvrir &#8594;</div>
       </div>
     </div>
     <div class="pres-side">
       <div class="qr-box">
-        <div class="qr-img-wrap"><img src="https://ddieoyfkliihvpqjgqfo.supabase.co/storage/v1/object/public/assets/qrcode.png" alt="QR Code" onerror="this.parentElement.innerHTML='<div style=padding:10px;text-align:center;font-size:11px;color:#888><div style=font-size:26px;margin-bottom:4px>📱</div>QR Code</div>'"></div>
+        <div class="qr-img-wrap"><img src="https://ddieoyfkliihvpqjgqfo.supabase.co/storage/v1/object/public/assets/qrcode.png" alt="QR Code" onerror="this.parentElement.innerHTML='<div style=padding:10px;text-align:center;font-size:11px;color:#888><div style=font-size:26px>&#128241;</div>QR Code</div>'"></div>
         <div class="qr-label">SCANNER POUR JOUER</div>
         <div class="qr-url" id="pres-url">lexmatch-jeu.vercel.app</div>
       </div>
@@ -422,8 +476,8 @@ body{font-family:'Montserrat',sans-serif;background:var(--blanc);color:var(--ble
         <div class="sess-list" id="pres-sessions"><div class="lb-empty">Aucune session active</div></div>
       </div>
       <div>
-        <div class="lb-title">🏆 Leaderboard</div>
-        <div class="lb-list" id="pres-lb"><div class="lb-empty">Les scores apparaîtront ici</div></div>
+        <div class="lb-title">&#127942; Leaderboard</div>
+        <div class="lb-list" id="pres-lb"><div class="lb-empty">Les scores appara&#238;tront ici</div></div>
       </div>
     </div>
   </div>
@@ -465,9 +519,10 @@ var G = {
   sessionId: null, manche: 1, score: 0, bonnes: 0, mauvaises: 0,
   situations: [], jouees: [], sitCourante: null, repondu: false,
   manchesExpert: [], selectionMulti: [],
-  timerStart: 0, timerIntv: null,
+  jokerUtilise: false, jokerActif: false, jokerIntv: null,
+  timerStart: 0, timerIntv: null, timerGele: false,
   vue: 'player', ecranActuel: 's-accueil',
-  presSessionId: null, presIntv: null, presLbIntv: null, presTimeIntv: null,
+  presSessionIds: [], presIntvs: {}, presLbIntv: null, presTimeIntv: null,
   presTimerStart: 0, presTimerIntv: null, _presTimerManche: null, presTimerTickIntv: null
 };
 
@@ -614,6 +669,7 @@ var TIMER_PTS_MAX = 100;
 var TIMER_PTS_MIN = 50;
 
 function calcPoints() {
+  if (G.timerGele && G._jokerPtsGeles !== undefined) return G._jokerPtsGeles;
   var elapsed = (Date.now() - G.timerStart) / 1000;
   if (elapsed <= 0) return TIMER_PTS_MAX;
   if (elapsed >= TIMER_MAX) return TIMER_PTS_MIN;
@@ -645,7 +701,11 @@ function tickTimer() {
 function afficherManche() {
   G.repondu = false;
   G.selectionMulti = [];
+  G.jokerActif = false;
+  G.timerGele = false;
+  G._jokerPtsGeles = undefined;
   stopTimer();
+  stopJokerPoll();
   var pct = ((G.manche - 1) / G.nbManches) * 100;
   document.getElementById('prog-fill').style.width = pct + '%';
   document.getElementById('prog-label').textContent = 'Manche ' + G.manche + ' / ' + G.nbManches;
@@ -723,6 +783,93 @@ function afficherManche() {
     validerHtml;
 
   setTimeout(startTimer, 50);
+
+  // Bouton joker joueur
+  var jokerHtml = document.createElement('div');
+  jokerHtml.className = 'joker-btn-wrap';
+  jokerHtml.id = 'joker-wrap';
+  if (!G.jokerUtilise) {
+    jokerHtml.innerHTML = '<button class="btn-joker-joueur" id="btn-joker-joueur" onclick="demanderJoker()">&#127484; Joker — Demander une aide (-25 pts)</button>';
+  }
+  document.getElementById('jeu-content').appendChild(jokerHtml);
+
+  // Démarrer le polling joker
+  startJokerPoll();
+}
+
+// ── JOKER JOUEUR ──
+function startJokerPoll() {
+  if (G.jokerIntv) clearInterval(G.jokerIntv);
+  if (!G.sessionId || G.jokerUtilise) return;
+  G.jokerIntv = setInterval(function() {
+    api('/sessions?id=eq.' + G.sessionId + '&select=joker_actif').then(function(rows) {
+      if (!rows.length) return;
+      var ja = rows[0].joker_actif;
+      if (ja && !G.jokerActif) {
+        G.jokerActif = true;
+        clearInterval(G.jokerIntv);
+        appliquerJoker();
+      }
+    }).catch(function(){});
+  }, 1500);
+}
+
+function stopJokerPoll() {
+  if (G.jokerIntv) { clearInterval(G.jokerIntv); G.jokerIntv = null; }
+}
+
+function demanderJoker() {
+  // Le joueur demande au présentateur d'activer le joker (il lui dit oralement)
+  toast('Demandez au présentateur d\'activer le joker pour vous !');
+}
+
+function appliquerJoker() {
+  if (G.repondu) return;
+  G.jokerUtilise = true;
+  G.timerGele = true;
+  stopTimer();
+
+  // Figer le timer visuellement (le temps ne compte plus)
+  var barEl = document.getElementById('timer-bar');
+  var numEl = document.getElementById('timer-num');
+  var ptsEl = document.getElementById('timer-pts');
+  var mult = DIFF_MULT[G.diff] || 1;
+  var ptsActuels = calcPoints();
+  var ptsAvecJoker = Math.max(1, Math.round(ptsActuels * mult) - 25);
+  if (barEl) { barEl.style.background = 'var(--or)'; barEl.style.width = '100%'; }
+  if (numEl) { numEl.textContent = '∞'; numEl.style.color = 'var(--or)'; }
+  if (ptsEl) { ptsEl.textContent = ptsAvecJoker + ' pts max'; ptsEl.style.color = 'var(--or)'; }
+
+  // Badge joker actif
+  var jokerWrap = document.getElementById('joker-wrap');
+  if (jokerWrap) jokerWrap.innerHTML = '<div class="joker-actif-badge">&#127484; Joker actif — Score gelé (-25 pts)</div>';
+
+  // Supprimer la moitié des mauvaises réponses
+  var sit = G.sitCourante;
+  var bonnes = sit._bonnes || [sit.bonne_reponse];
+  var boutons = Array.prototype.slice.call(document.querySelectorAll('.choice-btn'));
+  var mauvaisBoutons = boutons.filter(function(b) {
+    return bonnes.indexOf(b.textContent.trim()) === -1;
+  });
+  var nbASupprimer = Math.floor(mauvaisBoutons.length / 2);
+  var asupprimer = shuffle(mauvaisBoutons).slice(0, nbASupprimer);
+  asupprimer.forEach(function(b) {
+    b.style.opacity = '0.2';
+    b.style.pointerEvents = 'none';
+    b.style.textDecoration = 'line-through';
+    b.disabled = true;
+  });
+
+  toast('&#127484; Joker activé ! ' + nbASupprimer + ' mauvaise(s) réponse(s) supprimée(s). Le temps est gelé.');
+
+  // Mettre à jour le calcul de points pour qu'il retourne la valeur gelée
+  G._jokerPtsGeles = ptsActuels;
+
+  // Marquer joker consommé sur Supabase
+  api('/sessions?id=eq.' + G.sessionId, {
+    method: 'PATCH',
+    body: JSON.stringify({ joker_utilise: true, joker_actif: false })
+  }).catch(function(){});
 }
 
 // ── TOGGLE MULTI ──
@@ -759,7 +906,9 @@ function validerMulti() {
   var basePts = toutesOk ? calcPoints() : 0;
   var mult = DIFF_MULT[G.diff] || 1;
   var pts = Math.round(basePts * mult);
+  if (G.jokerActif || G.timerGele) pts = Math.max(1, pts - 25); // malus joker
   if (toutesOk) { G.score += pts; G.bonnes++; } else { G.mauvaises++; }
+  G.timerGele = false; G._jokerPtsGeles = undefined; stopJokerPoll();
 
   document.querySelectorAll('.choice-btn').forEach(function(b) {
     b.disabled = true;
@@ -816,7 +965,9 @@ function repondre(btn, rep) {
   var basePts = ok ? calcPoints() : 0;
   var mult = DIFF_MULT[G.diff] || 1;
   var pts = Math.round(basePts * mult);
+  if (G.jokerActif || G.timerGele) pts = Math.max(1, pts - 25); // malus joker
   if (ok) { G.score += pts; G.bonnes++; } else { G.mauvaises++; }
+  G.timerGele = false; G._jokerPtsGeles = undefined; stopJokerPoll();
 
   document.querySelectorAll('.choice-btn').forEach(function(b) {
     b.disabled = true;
@@ -913,160 +1064,234 @@ function startPres() {
   tickTime();
   if (G.presTimeIntv) clearInterval(G.presTimeIntv);
   G.presTimeIntv = setInterval(tickTime, 1000);
-  loadPresLb(); loadPressSessions();
+  loadPresLb(); loadPressSessions(); loadGlobalStats();
   if (G.presLbIntv) clearInterval(G.presLbIntv);
-  G.presLbIntv = setInterval(function() { loadPresLb(); loadPressSessions(); }, 3000);
+  G.presLbIntv = setInterval(function() {
+    loadPresLb(); loadPressSessions(); loadGlobalStats();
+    refreshAllPanels();
+  }, 3000);
 }
 function stopPres() {
   if (G.presTimeIntv) clearInterval(G.presTimeIntv);
   if (G.presLbIntv) clearInterval(G.presLbIntv);
-  if (G.presIntv) clearInterval(G.presIntv);
+  Object.keys(G.presIntvs).forEach(function(id) {
+    clearInterval(G.presIntvs[id]);
+  });
+  G.presIntvs = {};
+  G.presSessionIds = [];
 }
 function tickTime() {
   var el = document.getElementById('pres-time');
   if (el) { var n = new Date(); el.textContent = n.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
 }
+
+// ── STATS GLOBALES ──
+function loadGlobalStats() {
+  Promise.all([
+    api('/sessions?select=id,statut,score,created_at'),
+    api('/reponses?select=est_correcte')
+  ]).then(function(res) {
+    var sessions = res[0]; var reponses = res[1];
+    var today = new Date().toISOString().slice(0, 10);
+    var sessAujourdhui = sessions.filter(function(s) { return s.created_at && s.created_at.slice(0, 10) === today; });
+    var terminees = sessAujourdhui.filter(function(s) { return s.statut === 'termine'; });
+    var actives = sessions.filter(function(s) { return s.statut === 'en_cours'; });
+    var bonnes = reponses.filter(function(r) { return r.est_correcte; }).length;
+    var pctBonnes = reponses.length ? Math.round((bonnes / reponses.length) * 100) : 0;
+    var scores = terminees.map(function(s) { return s.score || 0; });
+    var scoreMoyen = scores.length ? Math.round(scores.reduce(function(a,b){return a+b;},0) / scores.length) : 0;
+
+    var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+    set('gs-joueurs', sessAujourdhui.length);
+    set('gs-parties', terminees.length);
+    set('gs-pct', reponses.length ? pctBonnes + '%' : '—');
+    set('gs-score', scores.length ? scoreMoyen + ' pts' : '—');
+    set('gs-actives', actives.length);
+  }).catch(function(){});
+}
+
+// ── SESSIONS LIST ──
 function loadPressSessions() {
   api('/sessions?statut=eq.en_cours&order=created_at.desc&select=*').then(function(rows) {
     var el = document.getElementById('pres-sessions');
     if (!el) return;
     if (!rows.length) { el.innerHTML = '<div class="lb-empty">Aucune session active</div>'; return; }
     el.innerHTML = rows.map(function(s) {
-      var safe = s.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+      var safe = s.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
       var safeJs = s.pseudo.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      return '<div class="sess-card" onclick="selPresSession(\'' + s.id + '\',\'' + safeJs + '\')">' +
+      var isOpen = G.presSessionIds.indexOf(s.id) !== -1;
+      return '<div class="sess-card' + (isOpen ? ' active-panel' : '') + '" onclick="togglePresSession(\'' + s.id + '\',\'' + safeJs + '\')">' +
         '<div class="sess-dot"></div>' +
         '<div class="sess-pseudo">' + safe + '</div>' +
-        '<div class="sess-manche">M' + s.manche_actuelle + '/' + s.nb_manches + '</div></div>';
+        '<div class="sess-manche">M' + s.manche_actuelle + '/' + s.nb_manches + (isOpen ? ' ✓' : '') + '</div></div>';
     }).join('');
   }).catch(function(){});
 }
+
+// ── TOGGLE SESSION PANEL ──
+function togglePresSession(id, pseudo) {
+  var idx = G.presSessionIds.indexOf(id);
+  if (idx !== -1) {
+    // Fermer
+    G.presSessionIds.splice(idx, 1);
+    if (G.presIntvs[id]) { clearInterval(G.presIntvs[id]); delete G.presIntvs[id]; }
+    renderPanels();
+  } else {
+    // Ouvrir
+    G.presSessionIds.push(id);
+    renderPanels();
+    refreshPanel(id);
+    G.presIntvs[id] = setInterval(function() { refreshPanel(id); }, 2500);
+  }
+  loadPressSessions(); // re-render sidebar avec marqueur
+}
+
+function refreshAllPanels() {
+  G.presSessionIds.forEach(function(id) { refreshPanel(id); });
+}
+
+function closePanel(id) {
+  togglePresSession(id, '');
+}
+
+function renderPanels() {
+  var area = document.getElementById('pres-sessions-area');
+  var grid = document.getElementById('pres-panels-grid');
+  if (!grid || !area) return;
+  if (!G.presSessionIds.length) { area.style.display = 'none'; return; }
+  area.style.display = 'block';
+  // Créer/màj les panels
+  var existing = {};
+  Array.prototype.forEach.call(grid.querySelectorAll('.sess-panel'), function(p) {
+    existing[p.dataset.sessId] = p;
+  });
+  // Supprimer panels qui ne sont plus ouverts
+  Object.keys(existing).forEach(function(id) {
+    if (G.presSessionIds.indexOf(id) === -1) existing[id].remove();
+  });
+  // Ajouter panels manquants
+  G.presSessionIds.forEach(function(id) {
+    if (!existing[id]) {
+      var div = document.createElement('div');
+      div.className = 'sess-panel';
+      div.dataset.sessId = id;
+      div.id = 'panel-' + id;
+      div.innerHTML = '<div class="p-waiting" style="padding:20px"><div class="spinner"></div></div>';
+      grid.appendChild(div);
+    }
+  });
+}
+
+// ── REFRESH UN PANEL ──
+function refreshPanel(id) {
+  var panelEl = document.getElementById('panel-' + id);
+  if (!panelEl) return;
+  Promise.all([
+    api('/sessions?id=eq.' + id + '&select=*'),
+    api('/reponses?session_id=eq.' + id + '&order=created_at.desc&limit=1&select=*,situations(*)'),
+    api('/reponses?session_id=eq.' + id + '&select=est_correcte,temps_reponse')
+  ]).then(function(res) {
+    var sess = res[0][0]; var last = res[1][0]; var allReps = res[2];
+    if (!sess) return;
+    var bon = allReps.filter(function(r) { return r.est_correcte; }).length;
+    var temps = allReps.filter(function(r) { return r.temps_reponse != null; }).map(function(r) { return r.temps_reponse; });
+    var tMoyen = temps.length ? (temps.reduce(function(a,b){return a+b;},0)/temps.length).toFixed(1) : '—';
+    var safePseudo = sess.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+    // Dernière situation
+    var sitResume = '';
+    if (last && last.situations) {
+      var s = last.situations;
+      var rep = last.reponse_choisie ? last.reponse_choisie.split(' | ')[0] : '';
+      sitResume = (last.est_correcte ? '✅' : '❌') + ' ' + s.situation.slice(0, 80) + (s.situation.length > 80 ? '...' : '');
+    }
+
+    // Joker déjà utilisé ?
+    var jokerUsed = sess.joker_utilise;
+    var jokerActifEnCours = sess.joker_actif;
+
+    var jokerBtnHtml = sess.statut === 'en_cours'
+      ? (jokerUsed
+          ? '<button class="sess-panel-btn btn-joker" disabled>Joker utilisé</button>'
+          : (jokerActifEnCours
+              ? '<button class="sess-panel-btn btn-joker" style="animation:pulse-or 1s infinite" disabled>Joker actif...</button>'
+              : '<button class="sess-panel-btn btn-joker" onclick="activerJokerPres(\'' + id + '\')">&#127484; Joker (-25 pts)</button>'))
+      : '';
+
+    var classerBtnHtml = sess.statut === 'en_cours'
+      ? '<button class="sess-panel-btn btn-classer" onclick="classerSession(\'' + id + '\')">&#10003; Classer</button>'
+      : '<span style="font-size:11px;color:rgba(255,255,255,0.35)">Session classée</span>';
+
+    panelEl.innerHTML =
+      '<div class="sess-panel-header">' +
+        '<div>' +
+          '<div class="sess-panel-pseudo">&#128100; ' + safePseudo + '</div>' +
+          '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">' + (sess.statut === 'termine' ? '&#10003; Terminée' : '&#128994; Manche ' + sess.manche_actuelle + '/' + sess.nb_manches) + '</div>' +
+        '</div>' +
+        '<button class="sess-panel-close" onclick="closePanel(\'' + id + '\')">&#215;</button>' +
+      '</div>' +
+      '<div class="sess-panel-stats">' +
+        '<div class="sess-mini-stat"><div class="sess-mini-num">' + sess.score + '</div><div class="sess-mini-label">Points</div></div>' +
+        '<div class="sess-mini-stat"><div class="sess-mini-num">' + bon + '/' + allReps.length + '</div><div class="sess-mini-label">Réussites</div></div>' +
+        '<div class="sess-mini-stat"><div class="sess-mini-num">' + tMoyen + 's</div><div class="sess-mini-label">Tps moy.</div></div>' +
+      '</div>' +
+      (sitResume ? '<div class="sess-panel-sit">' + sitResume + '</div>' : '') +
+      '<div class="sess-panel-btns">' + jokerBtnHtml + classerBtnHtml + '</div>';
+  }).catch(function(e) { console.error(e); });
+}
+
+// ── ACTIVER JOKER (présentateur) ──
+function activerJokerPres(sessId) {
+  api('/sessions?id=eq.' + sessId, {
+    method: 'PATCH',
+    body: JSON.stringify({ joker_actif: true })
+  }).then(function() {
+    toast('Joker activé pour ce joueur !');
+    refreshPanel(sessId);
+  }).catch(function() { toast('Erreur lors de l\'activation du joker'); });
+}
+
+// ── CLASSER SESSION ──
+function classerSession(sessId) {
+  api('/sessions?id=eq.' + sessId, {
+    method: 'PATCH',
+    body: JSON.stringify({ statut: 'termine' })
+  }).then(function() {
+    toast('Session classée dans le leaderboard');
+    // Fermer le panel
+    var idx = G.presSessionIds.indexOf(sessId);
+    if (idx !== -1) {
+      G.presSessionIds.splice(idx, 1);
+      if (G.presIntvs[sessId]) { clearInterval(G.presIntvs[sessId]); delete G.presIntvs[sessId]; }
+    }
+    renderPanels();
+    loadPressSessions();
+    loadPresLb();
+  }).catch(function() { toast('Erreur lors du classement'); });
+}
+
+// ── LEADERBOARD ──
 function loadPresLb() {
-  api('/sessions?order=score.desc&limit=10&select=pseudo,score').then(function(rows) {
+  api('/sessions?order=score.desc&limit=10&select=pseudo,score,statut').then(function(rows) {
     var el = document.getElementById('pres-lb');
     if (!el) return;
     if (!rows.length) { el.innerHTML = '<div class="lb-empty">Les scores apparaîtront ici</div>'; return; }
-    var med = ['🥇','🥈','🥉'];
+    var med = ['&#127945;','&#127946;','&#127947;'];
     el.innerHTML = rows.map(function(r, i) {
       var safe = r.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      var fin = r.statut === 'termine' ? '' : ' <span style="font-size:9px;color:var(--vert)">&#9679;</span>';
       return '<div class="lb-row"><div class="lb-rank">' + (med[i] || (i+1)+'.') + '</div>' +
-        '<div class="lb-pseudo">' + safe + '</div>' +
+        '<div class="lb-pseudo">' + safe + fin + '</div>' +
         '<div class="lb-score">' + r.score + '<span style="font-size:10px;opacity:0.5"> pts</span></div></div>';
     }).join('');
   }).catch(function(){});
 }
-function selPresSession(id, pseudo) {
-  G.presSessionId = id;
-  if (G.presIntv) clearInterval(G.presIntv);
-  refreshPresLive();
-  G.presIntv = setInterval(refreshPresLive, 2500);
-}
-function refreshPresLive() {
-  var id = G.presSessionId;
-  if (!id) return;
-  Promise.all([
-    api('/sessions?id=eq.' + id + '&select=*'),
-    api('/reponses?session_id=eq.' + id + '&order=created_at.desc&limit=1&select=*,situations(*)')
-  ]).then(function(res) {
-    var sess = res[0][0]; var reps = res[1]; if (!sess) return;
-    var last = reps[0];
-    api('/reponses?session_id=eq.' + id + '&select=est_correcte,temps_reponse').then(function(all) {
-      var bon = all.filter(function(r) { return r.est_correcte; }).length;
 
-      // Calcul temps moyen
-      var temps = all.filter(function(r) { return r.temps_reponse != null; }).map(function(r) { return r.temps_reponse; });
-      var tempsMoyen = temps.length ? (temps.reduce(function(a,b){return a+b;},0) / temps.length).toFixed(1) : '—';
-
-      var stats = '<div class="p-stats">' +
-        '<div class="p-stat"><div class="p-stat-num">' + sess.score + '</div><div class="p-stat-label">Points</div></div>' +
-        '<div class="p-stat"><div class="p-stat-num">' + sess.manche_actuelle + '/' + sess.nb_manches + '</div><div class="p-stat-label">Manche</div></div>' +
-        '<div class="p-stat"><div class="p-stat-num">' + bon + '/' + all.length + '</div><div class="p-stat-label">Réussites</div></div>' +
-        '<div class="p-stat"><div class="p-stat-num">' + tempsMoyen + 's</div><div class="p-stat-label">Tps moyen</div></div>' +
-        '</div>';
-
-      // Timer live (uniquement si session en cours et une réponse récente < 15s)
-      var timerHtml = '';
-      if (sess.statut === 'en_cours') {
-        // On démarre le timer présentateur à chaque nouvelle manche
-        var lastReponseAge = last ? (Date.now() - new Date(last.created_at).getTime()) / 1000 : 999;
-        var mancheEnCours = (all.length < sess.manche_actuelle); // la manche n'a pas encore de réponse
-        if (mancheEnCours) {
-          // Estimer le début de la manche : dernière réponse + ~1s
-          if (!G.presTimerStart || G._presTimerManche !== sess.manche_actuelle) {
-            G.presTimerStart = last ? (new Date(last.created_at).getTime() + 1200) : Date.now();
-            G._presTimerManche = sess.manche_actuelle;
-            // Démarrer le tick du timer présentateur
-            if (G.presTimerTickIntv) clearInterval(G.presTimerTickIntv);
-            G.presTimerTickIntv = setInterval(tickPresTimer, 200);
-          }
-          timerHtml = '<div class="pres-timer-wrap">' +
-            '<span style="font-size:12px;color:rgba(255,255,255,0.7);font-weight:600;white-space:nowrap">⏱ Timer joueur</span>' +
-            '<div class="pres-timer-bar-bg"><div class="pres-timer-bar-fill" id="pres-timer-bar" style="width:100%;background:var(--vert)"></div></div>' +
-            '<div class="pres-timer-num" id="pres-timer-num">' + TIMER_MAX + 's</div>' +
-            '<div class="pres-timer-pts" id="pres-timer-pts">100 pts max</div>' +
-            '</div>';
-        } else {
-          if (G.presTimerTickIntv) { clearInterval(G.presTimerTickIntv); G.presTimerTickIntv = null; }
-        }
-      }
-
-      var sitHtml = '';
-      if (last) {
-        var s = last.situations;
-        var cs = [s.bonne_reponse, s.mauvaise_reponse_1, s.mauvaise_reponse_2, s.mauvaise_reponse_3];
-        var choixH = cs.map(function(c) {
-          var cl = 'p-choice';
-          if (c === last.reponse_choisie && last.est_correcte) cl += ' c-ok';
-          else if (c === last.reponse_choisie && !last.est_correcte) cl += ' c-ko';
-          else if (c === s.bonne_reponse && !last.est_correcte) cl += ' c-ok';
-          var safeC = c.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-          return '<div class="' + cl + '">' + safeC + '</div>';
-        }).join('');
-        var tempsRep = last.temps_reponse ? ' en <strong>' + last.temps_reponse + 's</strong>' : '';
-        sitHtml = '<div class="pres-sit"><div class="pres-sit-label">📜 Dernière situation jouée</div>' +
-          '<div class="pres-sit-text">' + s.situation + '</div></div>' +
-          '<div class="p-choices">' + choixH + '</div>' +
-          '<div style="font-size:14px;color:rgba(255,255,255,0.75);text-align:center;padding:4px 0">' +
-          (last.est_correcte
-            ? '✅ Bonne réponse' + tempsRep + (last.temps_reponse ? ' — <strong style="color:var(--or-clair)">' + Math.max(50, Math.round(100 - (100-50)*last.temps_reponse/12)) + ' pts</strong>' : '')
-            : '❌ Raté — Bonne réponse : <strong style="color:var(--or-clair)">' + s.bonne_reponse + '</strong>') +
-          '</div>';
-      } else {
-        sitHtml = '<div class="p-waiting"><div class="p-wait-icon">⏳</div><div style="font-size:18px;font-weight:600;color:rgba(255,255,255,0.6)">En attente de la première réponse...</div></div>';
-      }
-      var safePseudo = sess.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-      document.getElementById('pres-main').innerHTML =
-        '<div style="display:flex;align-items:center;justify-content:space-between">' +
-          '<div><div class="p-name">👤 ' + safePseudo + '</div>' +
-          '<div class="p-status">' + (sess.statut === 'termine' ? '✅ Partie terminée' : '🟢 En jeu...') + '</div></div>' +
-          '<div style="display:flex;gap:10px;align-items:center">' +
-          '<div class="live-badge"><div class="live-dot"></div>LIVE</div>' +
-          '<button class="back-btn" onclick="retourPres()">← Retour</button></div></div>' +
-        stats + timerHtml + sitHtml;
-    }).catch(function(){});
-  }).catch(function(e) { console.error(e); });
-}
-
-function tickPresTimer() {
-  if (!G.presTimerStart) return;
-  var elapsed = (Date.now() - G.presTimerStart) / 1000;
-  var pct = Math.max(0, 1 - elapsed / TIMER_MAX);
-  var pts = Math.max(TIMER_PTS_MIN, Math.round(TIMER_PTS_MAX - ((TIMER_PTS_MAX - TIMER_PTS_MIN) * elapsed / TIMER_MAX)));
-  var color = pct > 0.5 ? '#2ecc71' : pct > 0.25 ? '#f39c12' : '#e74c3c';
-  var bar = document.getElementById('pres-timer-bar');
-  var num = document.getElementById('pres-timer-num');
-  var pts2 = document.getElementById('pres-timer-pts');
-  if (bar) { bar.style.width = (pct * 100) + '%'; bar.style.background = color; }
-  if (num) { num.textContent = Math.max(0, Math.ceil(TIMER_MAX - elapsed)) + 's'; num.style.color = color; }
-  if (pts2) { pts2.textContent = pts + ' pts max'; }
-}
 function retourPres() {
-  if (G.presIntv) clearInterval(G.presIntv);
-  G.presSessionId = null;
   document.getElementById('pres-main').innerHTML =
-    '<div class="p-waiting"><div class="p-wait-icon">⚖️</div>' +
-    '<div style="font-family:\'Cinzel\',serif;font-size:28px;font-weight:700;color:#ffffff;margin-bottom:12px;text-shadow:0 2px 20px rgba(160,127,76,0.4)">Prêt pour une partie ?</div>' +
-    '<div style="font-size:16px;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.5px">Sélectionnez une session dans la liste →</div></div>';
+    '<div class="p-waiting"><div class="p-wait-icon">&#9878;&#65039;</div>' +
+    '<div style="font-family:\'Cinzel\',serif;font-size:28px;font-weight:700;color:#ffffff;margin-bottom:12px;text-shadow:0 2px 20px rgba(160,127,76,0.4)">Pr\u00eat pour une partie ?</div>' +
+    '<div style="font-size:16px;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.5px">Cliquez sur une session dans la liste pour l\'ouvrir \u2192</div></div>';
 }
 
 // ── UTILS ──
