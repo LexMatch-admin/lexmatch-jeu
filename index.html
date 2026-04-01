@@ -248,16 +248,16 @@ body{font-family:'Montserrat',sans-serif;background:var(--blanc);color:var(--ble
 
 <!-- SCREEN ACCUEIL -->
 <div id="s-accueil" class="screen active">
-  <div class="header" style="justify-content:space-between">
+  <div class="header" style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center">
     <div class="header-logo">
       <img id="logo-accueil" src="https://ddieoyfkliihvpqjgqfo.supabase.co/storage/v1/object/public/assets/logo.png" class="header-logo-img" alt="LexMatch" onerror="this.style.display='none'">
       <div class="header-title">LEX<span>MATCH</span></div>
     </div>
-    <div style="display:flex;gap:7px;position:absolute;left:50%;transform:translateX(-50%)">
-      <button class="vbtn vbtn-p" id="vbtn-player" style="background:var(--or);color:#fff" disabled>👤 Joueur</button>
+    <div style="display:flex;gap:7px;justify-content:center">
+      <button class="vbtn" id="vbtn-player" style="background:var(--or);color:#fff;cursor:default;opacity:0.85">👤 Joueur</button>
       <button class="vbtn vbtn-pr" id="vbtn-pres" onclick="openModalMdp()">📺 Présentateur</button>
     </div>
-    <div class="header-badge">LE JEU</div>
+    <div style="display:flex;justify-content:flex-end"><div class="header-badge">LE JEU</div></div>
   </div>
   <div class="content">
     <div class="mascotte-wrap">
@@ -578,16 +578,9 @@ function goTo(id) {
   var el = document.getElementById(id);
   if (el) { el.classList.add('active'); G.ecranActuel = id; }
   window.scrollTo(0, 0);
-  // Masquer les boutons mode si on quitte l'accueil
-  var vbtnPres = document.getElementById('vbtn-pres');
-  var vbtnPlayer = document.getElementById('vbtn-player');
-  if (id === 's-accueil') {
-    if (vbtnPres) vbtnPres.style.display = '';
-    if (vbtnPlayer) vbtnPlayer.style.display = '';
-  } else {
-    if (vbtnPres) vbtnPres.style.display = 'none';
-    if (vbtnPlayer) vbtnPlayer.style.display = 'none';
-  }
+  // Les boutons mode sont dans le header de s-accueil :
+  // ils sont visibles uniquement quand s-accueil est actif (display:flex)
+  // => pas besoin de manipulation supplémentaire
 }
 
 // ── MOT DE PASSE ──
