@@ -1314,9 +1314,15 @@ function renderPanels() {
 }
 
 // ── REFRESH UN PANEL ──
+// Stratégie anti-clignotement :
+// - Premier appel : construction complète du HTML
+// - Appels suivants : mise à jour ciblée des éléments qui ont changé
+// - La situation n'est rechargée que si situation_courante_id a changé
+
 function refreshPanel(id) {
   var panelEl = document.getElementById('panel-' + id);
   if (!panelEl) return;
+
   Promise.all([
     api('/sessions?id=eq.' + id + '&select=*'),
     api('/reponses?session_id=eq.' + id + '&order=created_at.desc&limit=1&select=*,situations(*)'),
@@ -1325,6 +1331,7 @@ function refreshPanel(id) {
   ]).then(function(res) {
     var sess = res[0][0]; var last = res[1][0]; var allReps = res[2]; var lb = res[3];
     if (!sess) return;
+
     var bon = allReps.filter(function(r) { return r.est_correcte; }).length;
     var temps = allReps.filter(function(r) { return r.temps_reponse != null; }).map(function(r) { return r.temps_reponse; });
     var tMoyen = temps.length ? (temps.reduce(function(a,b){return a+b;},0)/temps.length).toFixed(1) : '—';
@@ -1332,38 +1339,6 @@ function refreshPanel(id) {
     var diffLabel = { facile: '🟢 Facile', moyen: '🟡 Moyen', juriste: '🔴 Juriste' }[sess.difficulte] || '⚪ —';
     var med = ['🥇','🥈','🥉'];
 
-    // ── Mini classement : joueur au-dessus + courant + joueur en-dessous ──
-    var posIdx = -1;
-    lb.forEach(function(r, i) { if (r.id === id) posIdx = i; });
-    var miniLbHtml = '';
-    if (posIdx !== -1) {
-      var rows = [];
-      if (posIdx > 0) {
-        var above = lb[posIdx - 1];
-        var aboveSafe = above.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-        rows.push('<div class="mini-lb-row other">' +
-          '<div class="mini-lb-rank">' + (med[posIdx-1] || posIdx + '.') + '</div>' +
-          '<div class="mini-lb-pseudo">' + aboveSafe + '</div>' +
-          '<div class="mini-lb-score">' + above.score + ' pts</div></div>');
-        rows.push('<div class="mini-lb-sep">···</div>');
-      }
-      rows.push('<div class="mini-lb-row current">' +
-        '<div class="mini-lb-rank">' + (med[posIdx] || (posIdx+1) + '.') + '</div>' +
-        '<div class="mini-lb-pseudo bold">👤 ' + safePseudo + '</div>' +
-        '<div class="mini-lb-score">' + sess.score + ' pts</div></div>');
-      if (posIdx < lb.length - 1) {
-        var below = lb[posIdx + 1];
-        var belowSafe = below.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-        rows.push('<div class="mini-lb-sep">···</div>');
-        rows.push('<div class="mini-lb-row other">' +
-          '<div class="mini-lb-rank">' + (med[posIdx+1] || (posIdx+2) + '.') + '</div>' +
-          '<div class="mini-lb-pseudo">' + belowSafe + '</div>' +
-          '<div class="mini-lb-score">' + below.score + ' pts</div></div>');
-      }
-      miniLbHtml = '<div class="mini-lb">' + rows.join('') + '</div>';
-    }
-
-    // Joker
     var jokerUsed = sess.joker_utilise;
     var jokerActifEnCours = sess.joker_actif;
     var jokerBtnHtml = sess.statut === 'en_cours'
@@ -1377,88 +1352,142 @@ function refreshPanel(id) {
       ? '<button class="sess-panel-btn btn-classer" onclick="classerSession(\'' + id + '\')">&#10003; Classer</button>'
       : '<span style="font-size:11px;color:rgba(255,255,255,0.35)">Session classée</span>';
 
-    // Construire le panel (avec zone situation dynamique)
-    panelEl.innerHTML =
-      '<div class="sess-panel-header">' +
-        '<div>' +
-          '<div class="sess-panel-pseudo">&#128100; ' + safePseudo + ' <span style="font-size:11px;font-weight:400;opacity:0.7">' + diffLabel + '</span></div>' +
-          '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">' + (sess.statut === 'termine' ? '&#10003; Terminée' : '&#128994; Manche ' + sess.manche_actuelle + '/' + sess.nb_manches) + '</div>' +
+    // ── PREMIÈRE CONSTRUCTION : si le panel n'a pas encore sa structure ──
+    var isBuilt = !!panelEl.querySelector('.sess-panel-header');
+    if (!isBuilt) {
+      panelEl.innerHTML =
+        '<div class="sess-panel-header">' +
+          '<div>' +
+            '<div class="sess-panel-pseudo">&#128100; ' + safePseudo + ' <span style="font-size:11px;font-weight:400;opacity:0.7">' + diffLabel + '</span></div>' +
+            '<div class="panel-manche" style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px"></div>' +
+          '</div>' +
+          '<button class="sess-panel-close" onclick="closePanel(\'' + id + '\')">&#215;</button>' +
         '</div>' +
-        '<button class="sess-panel-close" onclick="closePanel(\'' + id + '\')">&#215;</button>' +
-      '</div>' +
-      '<div class="sess-panel-stats">' +
-        '<div class="sess-mini-stat"><div class="sess-mini-num">' + sess.score + '</div><div class="sess-mini-label">Points</div></div>' +
-        '<div class="sess-mini-stat"><div class="sess-mini-num">' + bon + '/' + allReps.length + '</div><div class="sess-mini-label">Réussites</div></div>' +
-        '<div class="sess-mini-stat"><div class="sess-mini-num">' + tMoyen + 's</div><div class="sess-mini-label">Tps moy.</div></div>' +
-      '</div>' +
-      miniLbHtml +
-      '<div id="sit-zone-' + id + '"><div style="font-size:11px;color:rgba(255,255,255,0.3);text-align:center;padding:8px">Chargement situation...</div></div>' +
-      '<div class="sess-panel-btns">' + jokerBtnHtml + classerBtnHtml + '</div>';
+        '<div class="sess-panel-stats">' +
+          '<div class="sess-mini-stat"><div class="sess-mini-num panel-score"></div><div class="sess-mini-label">Points</div></div>' +
+          '<div class="sess-mini-stat"><div class="sess-mini-num panel-reussites"></div><div class="sess-mini-label">Réussites</div></div>' +
+          '<div class="sess-mini-stat"><div class="sess-mini-num panel-tps"></div><div class="sess-mini-label">Tps moy.</div></div>' +
+        '</div>' +
+        '<div class="mini-lb" id="mini-lb-' + id + '"></div>' +
+        '<div id="sit-zone-' + id + '" class="sit-zone-init"></div>' +
+        '<div class="sess-panel-btns" id="panel-btns-' + id + '"></div>';
+    }
 
-    // ── Charger et afficher la situation courante ──
+    // ── MISES À JOUR CIBLÉES (sans reconstruire le DOM) ──
+
+    // Manche / statut
+    var mancheEl = panelEl.querySelector('.panel-manche');
+    if (mancheEl) {
+      var mancheTxt = sess.statut === 'termine' ? '✓ Terminée' : '🟢 Manche ' + sess.manche_actuelle + '/' + sess.nb_manches;
+      if (mancheEl.textContent !== mancheTxt) mancheEl.textContent = mancheTxt;
+    }
+
+    // Stats chiffrées
+    var scoreEl = panelEl.querySelector('.panel-score');
+    if (scoreEl && scoreEl.textContent !== String(sess.score)) scoreEl.textContent = sess.score;
+    var reussEl = panelEl.querySelector('.panel-reussites');
+    var reussTxt = bon + '/' + allReps.length;
+    if (reussEl && reussEl.textContent !== reussTxt) reussEl.textContent = reussTxt;
+    var tpsEl = panelEl.querySelector('.panel-tps');
+    var tpsTxt = tMoyen + 's';
+    if (tpsEl && tpsEl.textContent !== tpsTxt) tpsEl.textContent = tpsTxt;
+
+    // Boutons joker/classer
+    var btnsEl = document.getElementById('panel-btns-' + id);
+    var newBtns = jokerBtnHtml + classerBtnHtml;
+    if (btnsEl && btnsEl.innerHTML !== newBtns) btnsEl.innerHTML = newBtns;
+
+    // ── Mini classement ──
+    var posIdx = -1;
+    lb.forEach(function(r, i) { if (r.id === id) posIdx = i; });
+    var miniLbEl = document.getElementById('mini-lb-' + id);
+    if (miniLbEl && posIdx !== -1) {
+      var rows = [];
+      if (posIdx > 0) {
+        var above = lb[posIdx - 1];
+        var aboveSafe = above.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+        rows.push('<div class="mini-lb-row other"><div class="mini-lb-rank">' + (med[posIdx-1] || posIdx + '.') + '</div><div class="mini-lb-pseudo">' + aboveSafe + '</div><div class="mini-lb-score">' + above.score + ' pts</div></div>');
+        rows.push('<div class="mini-lb-sep">···</div>');
+      }
+      rows.push('<div class="mini-lb-row current"><div class="mini-lb-rank">' + (med[posIdx] || (posIdx+1) + '.') + '</div><div class="mini-lb-pseudo bold">👤 ' + safePseudo + '</div><div class="mini-lb-score">' + sess.score + ' pts</div></div>');
+      if (posIdx < lb.length - 1) {
+        var below = lb[posIdx + 1];
+        var belowSafe = below.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+        rows.push('<div class="mini-lb-sep">···</div>');
+        rows.push('<div class="mini-lb-row other"><div class="mini-lb-rank">' + (med[posIdx+1] || (posIdx+2) + '.') + '</div><div class="mini-lb-pseudo">' + belowSafe + '</div><div class="mini-lb-score">' + below.score + ' pts</div></div>');
+      }
+      var newLb = rows.join('');
+      if (miniLbEl.innerHTML !== newLb) miniLbEl.innerHTML = newLb;
+    }
+
+    // ── Situation courante : ne recharger que si l'ID a changé ──
     var situationId = sess.situation_courante_id;
     var choixStr = sess.situation_courante_choix || '';
     var repondue = sess.situation_repondue;
+    var sitZone = document.getElementById('sit-zone-' + id);
 
-    if (situationId) {
-      api('/situations?id=eq.' + situationId + '&select=situation,bonne_reponse,bonne_reponse_2,bonne_reponse_3,explication,expert').then(function(sits) {
-        var sit = sits[0];
-        if (!sit) return;
-        var choix = choixStr ? choixStr.split('|') : [];
-        var bonnes = [sit.bonne_reponse];
-        if (sit.expert && sit.bonne_reponse_2) bonnes.push(sit.bonne_reponse_2);
-        if (sit.expert && sit.bonne_reponse_3) bonnes.push(sit.bonne_reponse_3);
+    // Stocker l'état précédent directement sur l'élément
+    var prevSitId = sitZone ? sitZone.dataset.sitId : null;
+    var prevRepondue = sitZone ? sitZone.dataset.repondue : null;
 
-        var repChoisies = [];
-        if (repondue && last && last.reponse_choisie) {
-          repChoisies = last.reponse_choisie.split(' | ');
-        }
+    // Ne recharger que si la situation a changé OU si le statut répondu a changé
+    var situationChanged = (prevSitId !== situationId) || (prevRepondue !== String(repondue));
 
-        var statusLabel = '';
-        var statusClass = '';
-        if (!repondue) {
-          statusLabel = '⏱ En attente de réponse...';
-          statusClass = 'en-cours';
-        } else if (last && last.est_correcte) {
-          statusLabel = '✅ Bonne réponse !';
-          statusClass = 'repondu-ok';
-        } else {
-          statusLabel = '❌ Mauvaise réponse';
-          statusClass = 'repondu-ko';
-        }
-
-        var choixHtml = choix.map(function(ch) {
-          var safeCh = ch.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-          var cls = 'sit-panel-btn';
-          if (repondue) {
-            if (bonnes.indexOf(ch) !== -1) cls += ' c-ok';
-            else if (repChoisies.indexOf(ch) !== -1) cls += ' c-ko';
-          } else {
-            cls += ' c-wait';
-          }
-          return '<div class="' + cls + '">' + safeCh + '</div>';
-        }).join('');
-
-        var explHtml = (repondue && sit.explication)
-          ? '<div class="sit-panel-expl">' + sit.explication.slice(0, 130) + (sit.explication.length > 130 ? '...' : '') + '</div>'
-          : '';
-
-        var sitBlock =
-          '<div class="sit-panel-wrap">' +
-          '<div class="sit-panel-label">📜 ' + (repondue ? 'Dernière question jouée' : 'Question en cours') + '</div>' +
-          '<div class="sit-panel-status ' + statusClass + '">' + statusLabel + '</div>' +
-          '<div class="sit-panel-text">' + sit.situation.slice(0, 110) + (sit.situation.length > 110 ? '...' : '') + '</div>' +
-          '<div class="sit-panel-choix">' + choixHtml + '</div>' +
-          explHtml +
-          '</div>';
-
-        var sitZone = document.getElementById('sit-zone-' + id);
-        if (sitZone) sitZone.innerHTML = sitBlock;
-      }).catch(function(){});
-    } else {
-      var sitZone = document.getElementById('sit-zone-' + id);
-      if (sitZone) sitZone.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">En attente du début de partie...</div>';
+    if (!situationId) {
+      if (sitZone && sitZone.classList.contains('sit-zone-init')) {
+        sitZone.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">En attente du début de partie...</div>';
+        sitZone.classList.remove('sit-zone-init');
+      }
+      return;
     }
+
+    if (!situationChanged) return; // Rien n'a changé, on ne touche à rien
+
+    // Marquer l'état courant avant le fetch pour éviter les doubles chargements
+    if (sitZone) {
+      sitZone.dataset.sitId = situationId;
+      sitZone.dataset.repondue = String(repondue);
+    }
+
+    api('/situations?id=eq.' + situationId + '&select=situation,bonne_reponse,bonne_reponse_2,bonne_reponse_3,explication,expert').then(function(sits) {
+      var sit = sits[0];
+      if (!sit) return;
+      var choix = choixStr ? choixStr.split('|') : [];
+      var bonnes = [sit.bonne_reponse];
+      if (sit.expert && sit.bonne_reponse_2) bonnes.push(sit.bonne_reponse_2);
+      if (sit.expert && sit.bonne_reponse_3) bonnes.push(sit.bonne_reponse_3);
+
+      var repChoisies = [];
+      if (repondue && last && last.reponse_choisie) repChoisies = last.reponse_choisie.split(' | ');
+
+      var statusLabel = !repondue ? '⏱ En attente de réponse...'
+        : (last && last.est_correcte ? '✅ Bonne réponse !' : '❌ Mauvaise réponse');
+      var statusClass = !repondue ? 'en-cours' : (last && last.est_correcte ? 'repondu-ok' : 'repondu-ko');
+
+      var choixHtml = choix.map(function(ch) {
+        var safeCh = ch.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+        var cls = 'sit-panel-btn' + (repondue
+          ? (bonnes.indexOf(ch) !== -1 ? ' c-ok' : (repChoisies.indexOf(ch) !== -1 ? ' c-ko' : ''))
+          : ' c-wait');
+        return '<div class="' + cls + '">' + safeCh + '</div>';
+      }).join('');
+
+      var explHtml = (repondue && sit.explication)
+        ? '<div class="sit-panel-expl">' + sit.explication.slice(0, 130) + (sit.explication.length > 130 ? '...' : '') + '</div>'
+        : '';
+
+      var sitBlock =
+        '<div class="sit-panel-wrap">' +
+        '<div class="sit-panel-label">📜 ' + (repondue ? 'Dernière question jouée' : 'Question en cours') + '</div>' +
+        '<div class="sit-panel-status ' + statusClass + '">' + statusLabel + '</div>' +
+        '<div class="sit-panel-text">' + sit.situation.slice(0, 110) + (sit.situation.length > 110 ? '...' : '') + '</div>' +
+        '<div class="sit-panel-choix">' + choixHtml + '</div>' +
+        explHtml +
+        '</div>';
+
+      var sz = document.getElementById('sit-zone-' + id);
+      if (sz) sz.innerHTML = sitBlock;
+    }).catch(function(){});
 
   }).catch(function(e) { console.error(e); });
 }
