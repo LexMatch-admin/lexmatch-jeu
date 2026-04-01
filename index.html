@@ -476,11 +476,14 @@ body{font-family:'Montserrat',sans-serif;background:var(--blanc);color:var(--ble
   <!-- Body principal -->
   <div class="pres-body" style="overflow:hidden">
     <div class="pres-main" id="pres-main" style="overflow-y:auto">
-      <!-- Zone panels sessions (dans le main, pas au-dessus) -->
+      <!-- Vue agrandie (QR / Leaderboard) -->
+      <div id="pres-expanded" style="display:none"></div>
+      <!-- Zone panels sessions -->
       <div id="pres-panels-container" style="display:none">
         <div style="font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--or-clair);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">Sessions ouvertes</div>
         <div class="pres-sessions-grid" id="pres-panels-grid"></div>
       </div>
+      <!-- État d'attente -->
       <div id="pres-waiting" class="p-waiting">
         <div class="p-wait-icon">&#9878;&#65039;</div>
         <div style="font-family:'Cinzel',serif;font-size:28px;font-weight:700;color:#ffffff;margin-bottom:12px;text-shadow:0 2px 20px rgba(160,127,76,0.4)">Pr&#234;t pour une partie ?</div>
@@ -937,16 +940,18 @@ function validerMulti() {
   var mult = DIFF_MULT[G.diff] || 1;
   var ptsBase = calcPoints(); // basé sur le temps
 
-  // Scoring proportionnel : compter bonnes cochées et mauvaises cochées
+  // Scoring proportionnel : bonnes cochées / total bonnes, malus fixe par mauvaise
   var nbBonnesCochees = G.selectionMulti.filter(function(r) { return bonnes.indexOf(r) !== -1; }).length;
   var nbMauvaisesCochees = G.selectionMulti.filter(function(r) { return bonnes.indexOf(r) === -1; }).length;
-  var ratio = bonnes.length > 0 ? nbBonnesCochees / bonnes.length : 0;
-  // Malus proportionnel aux mauvaises : chaque mauvaise réduit le ratio
-  if (nbMauvaisesCochees > 0) ratio = Math.max(0, ratio - (nbMauvaisesCochees / bonnes.length));
-  var pts = ratio > 0 ? Math.round(ptsBase * mult * ratio) : 0;
+  var pts = 0;
+  if (nbBonnesCochees > 0) {
+    var ratio = nbBonnesCochees / bonnes.length; // ex: 1/2 = 0.5
+    pts = Math.round(ptsBase * mult * ratio);    // ex: 100 * 1.0 * 0.5 = 50
+    pts = Math.max(0, pts - (nbMauvaisesCochees * 15)); // malus 15pts par mauvaise
+  }
   if (G.jokerActif || G.timerGele) pts = Math.max(0, pts - 25); // malus joker
   if (pts > 0) { G.score += pts; }
-  if (toutesOk && nbMauvaisesCochees === 0) { G.bonnes++; } else { G.mauvaises++; }
+  if (toutesOk) { G.bonnes++; } else { G.mauvaises++; }
   G.timerGele = false; G._jokerPtsGeles = undefined; stopJokerPoll();
 
   document.querySelectorAll('.choice-btn').forEach(function(b) {
@@ -1209,19 +1214,25 @@ function loadPressSessions() {
 
 // ── TOGGLE SESSION PANEL ──
 function togglePresSession(id, pseudo) {
-  // Si une vue agrandie est active, la fermer d'abord
+  // Fermer la vue agrandie si active
   G.presExpandMode = null;
+  var expanded = document.getElementById('pres-expanded');
+  if (expanded) expanded.style.display = 'none';
 
   var idx = G.presSessionIds.indexOf(id);
   if (idx !== -1) {
     // Fermer cette carte
     G.presSessionIds.splice(idx, 1);
     if (G.presIntvs[id]) { clearInterval(G.presIntvs[id]); delete G.presIntvs[id]; }
-    renderPanels();
+    if (G.presSessionIds.length === 0) {
+      showWaiting();
+    } else {
+      showPanels();
+    }
   } else {
-    // Ouvrir cette carte (affiche les cartes, masque vue expandée)
+    // Ouvrir cette carte
     G.presSessionIds.push(id);
-    renderPanels();
+    showPanels();
     refreshPanel(id);
     G.presIntvs[id] = setInterval(function() { refreshPanel(id); }, 2500);
   }
@@ -1385,22 +1396,44 @@ function retourPres() {
     '<div style="font-size:16px;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.5px">Cliquez sur une session dans la liste pour l\'ouvrir \u2192</div></div>';
 }
 
-// ── EXPAND VIEW PRÉSENTATEUR ──
-// G.presMainMode = 'panels' | 'qr' | 'sessions' | 'leaderboard'
-function expandView(mode) {
-  var main = document.getElementById('pres-main');
-  if (!main) return;
+// ── HELPERS VISIBILITÉ PRES-MAIN ──
+function showExpanded(html) {
+  var el = document.getElementById('pres-expanded');
+  var panels = document.getElementById('pres-panels-container');
+  var waiting = document.getElementById('pres-waiting');
+  if (el) { el.innerHTML = html; el.style.display = 'block'; }
+  if (panels) panels.style.display = 'none';
+  if (waiting) waiting.style.display = 'none';
+}
+function showPanels() {
+  var el = document.getElementById('pres-expanded');
+  var waiting = document.getElementById('pres-waiting');
+  if (el) el.style.display = 'none';
+  if (waiting) waiting.style.display = 'none';
+  // renderPanels gère l'affichage du container
+  renderPanels();
+}
+function showWaiting() {
+  var el = document.getElementById('pres-expanded');
+  var panels = document.getElementById('pres-panels-container');
+  var waiting = document.getElementById('pres-waiting');
+  if (el) el.style.display = 'none';
+  if (panels) panels.style.display = 'none';
+  if (waiting) waiting.style.display = 'flex';
+}
 
+// ── EXPAND VIEW PRÉSENTATEUR ──
+function expandView(mode) {
   // Fermer toutes les cartes de sessions actives
   G.presSessionIds.forEach(function(id) {
     if (G.presIntvs[id]) { clearInterval(G.presIntvs[id]); delete G.presIntvs[id]; }
   });
   G.presSessionIds = [];
   G.presExpandMode = mode;
-  loadPressSessions(); // màj marqueurs sidebar
+  loadPressSessions();
 
   if (mode === 'qr') {
-    main.innerHTML =
+    showExpanded(
       '<div class="pres-expanded-view">' +
       '<div class="pres-expanded-title">📱 QR Code — Scanner pour jouer' +
       '<button class="pres-expanded-back" onclick="retourVueNormale()">← Retour</button></div>' +
@@ -1409,12 +1442,12 @@ function expandView(mode) {
       '<img src="https://ddieoyfkliihvpqjgqfo.supabase.co/storage/v1/object/public/assets/qrcode.png" style="width:100%;height:100%;object-fit:contain" alt="QR Code">' +
       '</div>' +
       '<div style="font-family:Cinzel,serif;font-size:15px;color:var(--or-clair);letter-spacing:1px;font-weight:600">SCANNER POUR JOUER</div>' +
-      '<div style="font-size:13px;color:rgba(255,255,255,0.6)" id="pres-url-expand">' + window.location.href + '</div>' +
-      '</div></div>';
+      '<div style="font-size:13px;color:rgba(255,255,255,0.6)">' + window.location.href + '</div>' +
+      '</div></div>'
+    );
   }
 
   else if (mode === 'leaderboard') {
-    // Charger le leaderboard complet
     api('/sessions?order=score.desc&limit=50&select=pseudo,score,statut,difficulte').then(function(rows) {
       var med = ['🥇','🥈','🥉'];
       var lignes = rows.length ? rows.map(function(r, i) {
@@ -1428,30 +1461,19 @@ function expandView(mode) {
           '</div>';
       }).join('') : '<div class="lb-empty">Aucun score enregistré</div>';
 
-      main.innerHTML =
+      showExpanded(
         '<div class="pres-expanded-view">' +
         '<div class="pres-expanded-title">🏆 Leaderboard complet' +
         '<button class="pres-expanded-back" onclick="retourVueNormale()">← Retour</button></div>' +
-        lignes + '</div>';
+        '<div style="overflow-y:auto">' + lignes + '</div></div>'
+      );
     }).catch(function(){});
   }
-
 }
 
 function retourVueNormale() {
   G.presExpandMode = null;
-  // Afficher l'état d'attente si aucune carte n'est ouverte
-  if (!G.presSessionIds.length) {
-    var main = document.getElementById('pres-main');
-    var waiting = document.getElementById('pres-waiting');
-    var container = document.getElementById('pres-panels-container');
-    if (main) {
-      if (container) container.style.display = 'none';
-      if (waiting) waiting.style.display = 'flex';
-    }
-  } else {
-    renderPanels();
-  }
+  showWaiting();
 }
 
 // ── UTILS ──
