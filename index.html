@@ -1426,9 +1426,9 @@ function expandView(mode) {
     api('/sessions?statut=eq.en_cours&order=created_at.desc&select=*').then(function(rows) {
       var content = rows.length ? rows.map(function(s) {
         var safe = s.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-        var safeJs = s.pseudo.replace(/\/g,'\\').replace(/'/g,"\'");
+        var safeJs = s.pseudo.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         var diffIcon = { facile: '🟢 Facile', moyen: '🟡 Moyen', juriste: '🔴 Juriste' }[s.difficulte] || '';
-        return '<div class="sess-card" onclick="togglePresSession('' + s.id + '','' + safeJs + '');retourVueNormale();" style="padding:16px;margin-bottom:10px">' +
+        return '<div class="sess-card" onclick="togglePresSession(\'' + s.id + '\',\'' + safeJs + '\');retourVueNormale();" style="padding:16px;margin-bottom:10px">' +
           '<div class="sess-dot"></div>' +
           '<div style="flex:1"><div class="sess-pseudo" style="font-size:16px">' + safe + '</div>' +
           '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px">' + diffIcon + ' · Manche ' + s.manche_actuelle + '/' + s.nb_manches + ' · ' + (s.score||0) + ' pts</div></div>' +
