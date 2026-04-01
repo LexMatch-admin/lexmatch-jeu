@@ -497,7 +497,6 @@ body{font-family:'Montserrat',sans-serif;background:var(--blanc);color:var(--ble
       <div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div class="sess-label" style="margin-bottom:0">Sessions en cours</div>
-          <button class="side-expand-btn" onclick="expandView('sessions')" title="Agrandir">&#x26F6;</button>
         </div>
         <div class="sess-list" id="pres-sessions"><div class="lb-empty">Aucune session active</div></div>
       </div>
@@ -551,7 +550,8 @@ var G = {
   timerStart: 0, timerIntv: null, timerGele: false,
   vue: 'player', ecranActuel: 's-accueil',
   presSessionIds: [], presIntvs: {}, presLbIntv: null, presTimeIntv: null,
-  presTimerStart: 0, presTimerIntv: null, _presTimerManche: null, presTimerTickIntv: null
+  presTimerStart: 0, presTimerIntv: null, _presTimerManche: null, presTimerTickIntv: null,
+  presExpandMode: null // 'qr' | 'leaderboard' | null
 };
 
 // ── API ──
@@ -964,17 +964,21 @@ function validerMulti() {
   var ptsEl = document.getElementById('timer-pts');
   if (barEl) barEl.style.transition = 'none';
   if (numEl) numEl.textContent = Math.round(elapsed * 10) / 10 + 's';
-  if (ptsEl) { ptsEl.textContent = toutesOk ? '+' + pts + ' pts !' : '0 pt'; ptsEl.style.color = toutesOk ? 'var(--vert)' : 'var(--rouge)'; }
+  var partiel = pts > 0 && !toutesOk; // bonne(s) réponse(s) mais pas toutes
+  if (ptsEl) {
+    if (pts > 0) { ptsEl.textContent = '+' + pts + ' pts !'; ptsEl.style.color = 'var(--vert)'; }
+    else { ptsEl.textContent = '0 pt'; ptsEl.style.color = 'var(--rouge)'; }
+  }
 
   var bonnesStr = bonnes.join(' + ');
   var reveal = document.createElement('div');
-  reveal.className = 'reveal ' + (toutesOk ? 'reveal-ok' : 'reveal-ko');
+  reveal.className = 'reveal ' + (pts > 0 ? 'reveal-ok' : 'reveal-ko');
   reveal.style.width = '100%';
-  var ptsTxt = toutesOk ? '<div style="font-size:13px;font-weight:700;color:var(--vert);margin-bottom:4px">+' + pts + ' points en ' + Math.round(elapsed * 10) / 10 + 's</div>' : '';
-  var repTxt = !toutesOk ? '<div class="reveal-rep">Bonnes reponses : ' + bonnesStr + '</div>' : '<div style="font-size:12px;color:var(--or);margin-bottom:4px;font-weight:600">Reponses : ' + bonnesStr + '</div>';
+  var ptsTxt = pts > 0 ? '<div style="font-size:13px;font-weight:700;color:var(--vert);margin-bottom:4px">+' + pts + ' points en ' + Math.round(elapsed * 10) / 10 + 's' + (partiel ? ' <span style=\"font-size:11px;opacity:0.8\">(réponse partielle)</span>' : '') + '</div>' : '';
+  var repTxt = !toutesOk ? '<div class="reveal-rep">Bonnes réponses attendues : ' + bonnesStr + '</div>' : '<div style="font-size:12px;color:var(--or);margin-bottom:4px;font-weight:600">Réponses : ' + bonnesStr + '</div>';
   var exp = sit.explication ? '<div class="reveal-exp">' + sit.explication + '</div>' : '';
-  reveal.innerHTML = '<div class="reveal-emoji">' + (toutesOk ? '✅' : '❌') + '</div>' +
-    '<div class="reveal-title">' + (toutesOk ? 'Toutes les bonnes reponses !' : 'Pas tout a fait !') + '</div>' +
+  reveal.innerHTML = '<div class="reveal-emoji">' + (toutesOk ? '✅' : (pts > 0 ? '🟡' : '❌')) + '</div>' +
+    '<div class="reveal-title">' + (toutesOk ? 'Toutes les bonnes réponses !' : (pts > 0 ? 'Réponse partielle !' : 'Pas tout à fait !')) + '</div>' +
     ptsTxt + repTxt + exp;
   document.getElementById('jeu-content').appendChild(reveal);
 
@@ -1205,20 +1209,23 @@ function loadPressSessions() {
 
 // ── TOGGLE SESSION PANEL ──
 function togglePresSession(id, pseudo) {
+  // Si une vue agrandie est active, la fermer d'abord
+  G.presExpandMode = null;
+
   var idx = G.presSessionIds.indexOf(id);
   if (idx !== -1) {
-    // Fermer
+    // Fermer cette carte
     G.presSessionIds.splice(idx, 1);
     if (G.presIntvs[id]) { clearInterval(G.presIntvs[id]); delete G.presIntvs[id]; }
     renderPanels();
   } else {
-    // Ouvrir
+    // Ouvrir cette carte (affiche les cartes, masque vue expandée)
     G.presSessionIds.push(id);
     renderPanels();
     refreshPanel(id);
     G.presIntvs[id] = setInterval(function() { refreshPanel(id); }, 2500);
   }
-  loadPressSessions(); // re-render sidebar avec marqueur
+  loadPressSessions();
 }
 
 function refreshAllPanels() {
@@ -1384,6 +1391,14 @@ function expandView(mode) {
   var main = document.getElementById('pres-main');
   if (!main) return;
 
+  // Fermer toutes les cartes de sessions actives
+  G.presSessionIds.forEach(function(id) {
+    if (G.presIntvs[id]) { clearInterval(G.presIntvs[id]); delete G.presIntvs[id]; }
+  });
+  G.presSessionIds = [];
+  G.presExpandMode = mode;
+  loadPressSessions(); // màj marqueurs sidebar
+
   if (mode === 'qr') {
     main.innerHTML =
       '<div class="pres-expanded-view">' +
@@ -1421,32 +1436,22 @@ function expandView(mode) {
     }).catch(function(){});
   }
 
-  else if (mode === 'sessions') {
-    // Afficher toutes les sessions actives en grand
-    api('/sessions?statut=eq.en_cours&order=created_at.desc&select=*').then(function(rows) {
-      var content = rows.length ? rows.map(function(s) {
-        var safe = s.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-        var safeJs = s.pseudo.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        var diffIcon = { facile: '🟢 Facile', moyen: '🟡 Moyen', juriste: '🔴 Juriste' }[s.difficulte] || '';
-        return '<div class="sess-card" onclick="togglePresSession(\'' + s.id + '\',\'' + safeJs + '\');retourVueNormale();" style="padding:16px;margin-bottom:10px">' +
-          '<div class="sess-dot"></div>' +
-          '<div style="flex:1"><div class="sess-pseudo" style="font-size:16px">' + safe + '</div>' +
-          '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px">' + diffIcon + ' · Manche ' + s.manche_actuelle + '/' + s.nb_manches + ' · ' + (s.score||0) + ' pts</div></div>' +
-          '<div style="font-size:20px">→</div>' +
-          '</div>';
-      }).join('') : '<div class="lb-empty">Aucune session active</div>';
-
-      main.innerHTML =
-        '<div class="pres-expanded-view">' +
-        '<div class="pres-expanded-title">🟢 Sessions en cours' +
-        '<button class="pres-expanded-back" onclick="retourVueNormale()">← Retour</button></div>' +
-        content + '</div>';
-    }).catch(function(){});
-  }
 }
 
 function retourVueNormale() {
-  renderPanels();
+  G.presExpandMode = null;
+  // Afficher l'état d'attente si aucune carte n'est ouverte
+  if (!G.presSessionIds.length) {
+    var main = document.getElementById('pres-main');
+    var waiting = document.getElementById('pres-waiting');
+    var container = document.getElementById('pres-panels-container');
+    if (main) {
+      if (container) container.style.display = 'none';
+      if (waiting) waiting.style.display = 'flex';
+    }
+  } else {
+    renderPanels();
+  }
 }
 
 // ── UTILS ──
