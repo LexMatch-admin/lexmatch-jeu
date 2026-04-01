@@ -239,6 +239,30 @@ body{font-family:'Montserrat',sans-serif;background:var(--blanc);color:var(--ble
 .confetto{position:absolute;animation:fall linear forwards;}
 @keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
 .footer{text-align:center;padding:14px;font-size:11px;color:rgba(10,20,114,0.3);}
+/* ── PANEL ÉTENDU : mini classement + situation courante ── */
+.sess-panel{min-width:300px;max-width:480px;}
+.mini-lb{margin:8px 0;border-radius:var(--radius-sm);overflow:hidden;}
+.mini-lb-row{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:12px;}
+.mini-lb-row.current{background:rgba(160,127,76,0.2);border:1px solid rgba(160,127,76,0.4);border-radius:6px;}
+.mini-lb-row.other{background:rgba(255,255,255,0.05);border-radius:6px;}
+.mini-lb-rank{font-family:'Cinzel',serif;font-weight:700;color:var(--or-clair);min-width:22px;font-size:13px;}
+.mini-lb-pseudo{flex:1;color:rgba(255,255,255,0.8);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mini-lb-pseudo.bold{color:#fff;font-weight:700;}
+.mini-lb-score{font-family:'Cinzel',serif;font-weight:700;color:var(--or-clair);font-size:13px;}
+.mini-lb-sep{text-align:center;font-size:10px;color:rgba(255,255,255,0.2);padding:2px 0;}
+.sit-panel-wrap{margin:8px 0;background:rgba(10,20,114,0.3);border:1px solid rgba(26,42,158,0.4);border-radius:var(--radius-sm);padding:10px;}
+.sit-panel-label{font-size:9px;font-weight:700;color:var(--or-clair);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.sit-panel-text{font-size:11px;line-height:1.5;color:rgba(255,255,255,0.85);margin-bottom:8px;}
+.sit-panel-choix{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.sit-panel-btn{padding:5px 7px;border-radius:5px;font-size:10px;font-weight:600;text-align:center;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);}
+.sit-panel-btn.c-ok{background:rgba(46,204,113,0.15);border-color:rgba(46,204,113,0.4);color:#6fffa8;}
+.sit-panel-btn.c-ko{background:rgba(231,76,60,0.12);border-color:rgba(231,76,60,0.3);color:#ff9090;}
+.sit-panel-btn.c-wait{background:rgba(160,127,76,0.1);border-color:rgba(160,127,76,0.3);color:var(--or-clair);}
+.sit-panel-expl{font-size:10px;color:rgba(255,255,255,0.5);line-height:1.4;margin-top:6px;font-style:italic;}
+.sit-panel-status{font-size:10px;font-weight:700;margin-bottom:4px;}
+.sit-panel-status.en-cours{color:var(--or-clair);}
+.sit-panel-status.repondu-ok{color:var(--vert);}
+.sit-panel-status.repondu-ko{color:var(--rouge);}
 @media(max-width:480px){.content{padding:18px 14px;}.t-xl{font-size:22px;}.p-choices{grid-template-columns:1fr 1fr;}.pres-body{grid-template-columns:1fr;}.pres-side{display:none;}}
 </style>
 </head>
@@ -772,7 +796,13 @@ function afficherManche() {
   if (sit.mauvaise_reponse_6) mauvaises.push(sit.mauvaise_reponse_6);
   var choix = shuffle(bonnes.concat(mauvaises.filter(Boolean)));
 
-  api('/sessions?id=eq.' + G.sessionId, { method: 'PATCH', body: JSON.stringify({ manche_actuelle: G.manche }) }).catch(function(){});
+  // Sauvegarder la situation courante pour le présentateur
+  api('/sessions?id=eq.' + G.sessionId, { method: 'PATCH', body: JSON.stringify({
+    manche_actuelle: G.manche,
+    situation_courante_id: sit.id,
+    situation_courante_choix: choix.join('|'),
+    situation_repondue: false
+  }) }).catch(function(){});
 
   var diffLabel = { facile: '🟢 Facile', moyen: '🟡 Moyen', juriste: '🔴 Juriste' }[G.diff] || '';
   var expertTag = estMulti ? ' <span class="diff-badge diff-juriste">Multi-reponses</span>' : '';
@@ -988,7 +1018,7 @@ function validerMulti() {
   document.getElementById('jeu-content').appendChild(reveal);
 
   api('/reponses', { method: 'POST', body: JSON.stringify({ session_id: G.sessionId, situation_id: sit.id, reponse_choisie: G.selectionMulti.join(' | '), est_correcte: toutesOk, temps_reponse: Math.round(elapsed * 10) / 10 }) }).catch(function(){});
-  api('/sessions?id=eq.' + G.sessionId, { method: 'PATCH', body: JSON.stringify({ score: G.score }) }).catch(function(){});
+  api('/sessions?id=eq.' + G.sessionId, { method: 'PATCH', body: JSON.stringify({ score: G.score, situation_repondue: true }) }).catch(function(){});
   document.getElementById('score-hdr').textContent = G.score + ' pt';
   if (toutesOk) confetti(false);
 
@@ -1043,7 +1073,7 @@ function repondre(btn, rep) {
   document.getElementById('jeu-content').appendChild(reveal);
 
   api('/reponses', { method: 'POST', body: JSON.stringify({ session_id: G.sessionId, situation_id: sit.id, reponse_choisie: rep, est_correcte: ok, temps_reponse: Math.round(elapsed * 10) / 10 }) }).catch(function(){});
-  api('/sessions?id=eq.' + G.sessionId, { method: 'PATCH', body: JSON.stringify({ score: G.score }) }).catch(function(){});
+  api('/sessions?id=eq.' + G.sessionId, { method: 'PATCH', body: JSON.stringify({ score: G.score, situation_repondue: true }) }).catch(function(){});
   document.getElementById('score-hdr').textContent = G.score + ' pt';
   if (ok) confetti(false);
 
@@ -1290,28 +1320,52 @@ function refreshPanel(id) {
   Promise.all([
     api('/sessions?id=eq.' + id + '&select=*'),
     api('/reponses?session_id=eq.' + id + '&order=created_at.desc&limit=1&select=*,situations(*)'),
-    api('/reponses?session_id=eq.' + id + '&select=est_correcte,temps_reponse')
+    api('/reponses?session_id=eq.' + id + '&select=est_correcte,temps_reponse'),
+    api('/sessions?order=score.desc&select=id,pseudo,score')
   ]).then(function(res) {
-    var sess = res[0][0]; var last = res[1][0]; var allReps = res[2];
+    var sess = res[0][0]; var last = res[1][0]; var allReps = res[2]; var lb = res[3];
     if (!sess) return;
     var bon = allReps.filter(function(r) { return r.est_correcte; }).length;
     var temps = allReps.filter(function(r) { return r.temps_reponse != null; }).map(function(r) { return r.temps_reponse; });
     var tMoyen = temps.length ? (temps.reduce(function(a,b){return a+b;},0)/temps.length).toFixed(1) : '—';
     var safePseudo = sess.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
     var diffLabel = { facile: '🟢 Facile', moyen: '🟡 Moyen', juriste: '🔴 Juriste' }[sess.difficulte] || '⚪ —';
+    var med = ['🥇','🥈','🥉'];
 
-    // Dernière situation
-    var sitResume = '';
-    if (last && last.situations) {
-      var s = last.situations;
-      var rep = last.reponse_choisie ? last.reponse_choisie.split(' | ')[0] : '';
-      sitResume = (last.est_correcte ? '✅' : '❌') + ' ' + s.situation.slice(0, 80) + (s.situation.length > 80 ? '...' : '');
+    // ── Mini classement : joueur au-dessus + courant + joueur en-dessous ──
+    var posIdx = -1;
+    lb.forEach(function(r, i) { if (r.id === id) posIdx = i; });
+    var miniLbHtml = '';
+    if (posIdx !== -1) {
+      var rows = [];
+      if (posIdx > 0) {
+        var above = lb[posIdx - 1];
+        var aboveSafe = above.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+        rows.push('<div class="mini-lb-row other">' +
+          '<div class="mini-lb-rank">' + (med[posIdx-1] || posIdx + '.') + '</div>' +
+          '<div class="mini-lb-pseudo">' + aboveSafe + '</div>' +
+          '<div class="mini-lb-score">' + above.score + ' pts</div></div>');
+        rows.push('<div class="mini-lb-sep">···</div>');
+      }
+      rows.push('<div class="mini-lb-row current">' +
+        '<div class="mini-lb-rank">' + (med[posIdx] || (posIdx+1) + '.') + '</div>' +
+        '<div class="mini-lb-pseudo bold">👤 ' + safePseudo + '</div>' +
+        '<div class="mini-lb-score">' + sess.score + ' pts</div></div>');
+      if (posIdx < lb.length - 1) {
+        var below = lb[posIdx + 1];
+        var belowSafe = below.pseudo.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+        rows.push('<div class="mini-lb-sep">···</div>');
+        rows.push('<div class="mini-lb-row other">' +
+          '<div class="mini-lb-rank">' + (med[posIdx+1] || (posIdx+2) + '.') + '</div>' +
+          '<div class="mini-lb-pseudo">' + belowSafe + '</div>' +
+          '<div class="mini-lb-score">' + below.score + ' pts</div></div>');
+      }
+      miniLbHtml = '<div class="mini-lb">' + rows.join('') + '</div>';
     }
 
-    // Joker déjà utilisé ?
+    // Joker
     var jokerUsed = sess.joker_utilise;
     var jokerActifEnCours = sess.joker_actif;
-
     var jokerBtnHtml = sess.statut === 'en_cours'
       ? (jokerUsed
           ? '<button class="sess-panel-btn btn-joker" disabled>Joker utilisé</button>'
@@ -1319,11 +1373,11 @@ function refreshPanel(id) {
               ? '<button class="sess-panel-btn btn-joker" style="animation:pulse-or 1s infinite" disabled>Joker actif...</button>'
               : '<button class="sess-panel-btn btn-joker" onclick="activerJokerPres(\'' + id + '\')">&#127484; Joker (-25 pts)</button>'))
       : '';
-
     var classerBtnHtml = sess.statut === 'en_cours'
       ? '<button class="sess-panel-btn btn-classer" onclick="classerSession(\'' + id + '\')">&#10003; Classer</button>'
       : '<span style="font-size:11px;color:rgba(255,255,255,0.35)">Session classée</span>';
 
+    // Construire le panel (avec zone situation dynamique)
     panelEl.innerHTML =
       '<div class="sess-panel-header">' +
         '<div>' +
@@ -1337,8 +1391,75 @@ function refreshPanel(id) {
         '<div class="sess-mini-stat"><div class="sess-mini-num">' + bon + '/' + allReps.length + '</div><div class="sess-mini-label">Réussites</div></div>' +
         '<div class="sess-mini-stat"><div class="sess-mini-num">' + tMoyen + 's</div><div class="sess-mini-label">Tps moy.</div></div>' +
       '</div>' +
-      (sitResume ? '<div class="sess-panel-sit">' + sitResume + '</div>' : '') +
+      miniLbHtml +
+      '<div id="sit-zone-' + id + '"><div style="font-size:11px;color:rgba(255,255,255,0.3);text-align:center;padding:8px">Chargement situation...</div></div>' +
       '<div class="sess-panel-btns">' + jokerBtnHtml + classerBtnHtml + '</div>';
+
+    // ── Charger et afficher la situation courante ──
+    var situationId = sess.situation_courante_id;
+    var choixStr = sess.situation_courante_choix || '';
+    var repondue = sess.situation_repondue;
+
+    if (situationId) {
+      api('/situations?id=eq.' + situationId + '&select=situation,bonne_reponse,bonne_reponse_2,bonne_reponse_3,explication,expert').then(function(sits) {
+        var sit = sits[0];
+        if (!sit) return;
+        var choix = choixStr ? choixStr.split('|') : [];
+        var bonnes = [sit.bonne_reponse];
+        if (sit.expert && sit.bonne_reponse_2) bonnes.push(sit.bonne_reponse_2);
+        if (sit.expert && sit.bonne_reponse_3) bonnes.push(sit.bonne_reponse_3);
+
+        var repChoisies = [];
+        if (repondue && last && last.reponse_choisie) {
+          repChoisies = last.reponse_choisie.split(' | ');
+        }
+
+        var statusLabel = '';
+        var statusClass = '';
+        if (!repondue) {
+          statusLabel = '⏱ En attente de réponse...';
+          statusClass = 'en-cours';
+        } else if (last && last.est_correcte) {
+          statusLabel = '✅ Bonne réponse !';
+          statusClass = 'repondu-ok';
+        } else {
+          statusLabel = '❌ Mauvaise réponse';
+          statusClass = 'repondu-ko';
+        }
+
+        var choixHtml = choix.map(function(ch) {
+          var safeCh = ch.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+          var cls = 'sit-panel-btn';
+          if (repondue) {
+            if (bonnes.indexOf(ch) !== -1) cls += ' c-ok';
+            else if (repChoisies.indexOf(ch) !== -1) cls += ' c-ko';
+          } else {
+            cls += ' c-wait';
+          }
+          return '<div class="' + cls + '">' + safeCh + '</div>';
+        }).join('');
+
+        var explHtml = (repondue && sit.explication)
+          ? '<div class="sit-panel-expl">' + sit.explication.slice(0, 130) + (sit.explication.length > 130 ? '...' : '') + '</div>'
+          : '';
+
+        var sitBlock =
+          '<div class="sit-panel-wrap">' +
+          '<div class="sit-panel-label">📜 ' + (repondue ? 'Dernière question jouée' : 'Question en cours') + '</div>' +
+          '<div class="sit-panel-status ' + statusClass + '">' + statusLabel + '</div>' +
+          '<div class="sit-panel-text">' + sit.situation.slice(0, 110) + (sit.situation.length > 110 ? '...' : '') + '</div>' +
+          '<div class="sit-panel-choix">' + choixHtml + '</div>' +
+          explHtml +
+          '</div>';
+
+        var sitZone = document.getElementById('sit-zone-' + id);
+        if (sitZone) sitZone.innerHTML = sitBlock;
+      }).catch(function(){});
+    } else {
+      var sitZone = document.getElementById('sit-zone-' + id);
+      if (sitZone) sitZone.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">En attente du début de partie...</div>';
+    }
+
   }).catch(function(e) { console.error(e); });
 }
 
