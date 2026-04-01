@@ -970,16 +970,17 @@ function validerMulti() {
   var mult = DIFF_MULT[G.diff] || 1;
   var ptsBase = calcPoints(); // basé sur le temps
 
-  // Scoring proportionnel : bonnes cochées / total bonnes, malus fixe par mauvaise
+  // Scoring proportionnel :
+  // 1. ptsApresTemps = ptsBase (100→25 selon temps) × mult difficulté
+  // 2. ratio = nbBonnes cochées / nbBonnes attendues
+  // 3. pts = ptsApresTemps × ratio
+  // Exemple : 90 pts après temps, 1 bonne sur 2 → 90 × 0.5 = 45 pts
   var nbBonnesCochees = G.selectionMulti.filter(function(r) { return bonnes.indexOf(r) !== -1; }).length;
   var nbMauvaisesCochees = G.selectionMulti.filter(function(r) { return bonnes.indexOf(r) === -1; }).length;
-  var pts = 0;
-  if (nbBonnesCochees > 0) {
-    var ratio = nbBonnesCochees / bonnes.length; // ex: 1/2 = 0.5
-    pts = Math.round(ptsBase * mult * ratio);    // ex: 100 * 1.0 * 0.5 = 50
-    pts = Math.max(0, pts - (nbMauvaisesCochees * 15)); // malus 15pts par mauvaise
-  }
-  if (G.jokerActif || G.timerGele) pts = Math.max(0, pts - 25); // malus joker
+  var ptsApresTemps = Math.round(ptsBase * mult); // points après déduction du temps
+  if (G.jokerActif || G.timerGele) ptsApresTemps = Math.max(0, ptsApresTemps - 25); // malus joker
+  var ratio = bonnes.length > 0 ? nbBonnesCochees / bonnes.length : 0;
+  var pts = Math.round(ptsApresTemps * ratio);
   if (pts > 0) { G.score += pts; }
   if (toutesOk) { G.bonnes++; } else { G.mauvaises++; }
   G.timerGele = false; G._jokerPtsGeles = undefined; stopJokerPoll();
